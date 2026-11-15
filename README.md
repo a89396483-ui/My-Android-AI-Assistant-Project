@@ -4,7 +4,7 @@ This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Open the project in the [Lovable editor](https://lovable.dev) and keep building.
+Open your project in the [Lovable editor](https://lovable.dev) and keep building.
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
@@ -12,13 +12,13 @@ Open the project in the [Lovable editor](https://lovable.dev) and keep building.
 
 ## Development
 
-Prefer working locally? You need Bun — install it from https://bun.sh/.
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
-bun install
-bun run dev
+npm i
+npm run dev
 ```
 
 ## Built with
