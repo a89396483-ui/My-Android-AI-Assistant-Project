@@ -162,7 +162,7 @@ function BusinessManager() {
               <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask your AI manager…" className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-slate-500" />
               <button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-2 text-xs font-bold text-white">Ask</button>
             </form>
-            {sent && <p className="mt-2 text-xs text-cyan-200">Request noted in this preview: “{sent}”. AI connection will be added in the next integration phase.</p>}
+            {sent && <p className="mt-2 whitespace-pre-wrap text-xs text-cyan-200">{sent}</p>}
           </div>
 
           {active === "overview" ? (
