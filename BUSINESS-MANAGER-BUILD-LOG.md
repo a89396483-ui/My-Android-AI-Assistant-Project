@@ -42,3 +42,27 @@
 ## Launch dependency
 
 A real marketing launch by the target window depends on the owner supplying the reference design, business identity, offer, contact details, target audience, and the channels to use, plus successful authorized channel connections. The date is a target, not a guarantee.
+
+## Additional implementation — 2026-11-16
+
+- Added `src/lib/business-manager.ts` with specialist request routing, a truthful capability-reply builder, marketing-post draft generation, and account-summary calculations.
+- Added `src/lib/business-manager.test.ts` covering request routing, marketing draft fields, account totals, and customer capability replies. Tests have been authored but not executed.
+- Extended the dashboard with:
+  - Business profile form (business name, services, service area, public contact, private owner contact).
+  - Marketing post draft generator with optional offer and copy action.
+  - Manual customer lead form and list.
+  - On-device income/expense ledger with PKR totals.
+  - Customer capability reply preview.
+  - Owner handoff setup guidance.
+- Browser-local profile, leads, and account records use localStorage on the current device only. They are not cloud-synced and should not be treated as a production database.
+- Main manager preview now recognizes common requests and opens the matching department; capability questions return the current honest preview list. It is not yet connected to a live AI model.
+- Customer capability wording was restricted to features actually present in this preview; no live WhatsApp inbox, autonomous prospecting, social publishing, or paid advertising is claimed.
+
+## Remaining blockers before launch
+
+1. Restore the original `src/routes/index.tsx` and remaining recovered original UI assets/components from the user's 28-file recovery package into the GitHub branch. They are not all present on this branch yet.
+2. Run dependency install, lint, tests, and production build in a connected build environment.
+3. Replace browser-local records with an authenticated persistent database and server-side authorization.
+4. Connect an approved AI provider and test manager-to-specialist routing with real model responses.
+5. Configure the owner's business details and verified public contact.
+6. Connect approved customer and marketing channels; test consent, message templates, owner handoff, rate limits, and spend controls.
