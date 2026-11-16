@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, routeManagerRequest, type AccountEntry, type BusinessLead, type BusinessProfile, summarizeAccounts } from "@/lib/business-manager";
+import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, makeMarketingCampaign, routeManagerRequest, type AccountEntry, type BusinessLead, type BusinessProfile, summarizeAccounts } from "@/lib/business-manager";
 import {
   Activity, ArrowLeft, ArrowUpRight, Bot, BriefcaseBusiness, ChartNoAxesCombined,
   CheckCircle2, ChevronRight, CircleHelp, ClipboardList, Contact, FileText,
@@ -52,6 +52,12 @@ function BusinessManager() {
   const [leadNeed, setLeadNeed] = useState("");
   const [offer, setOffer] = useState("");
   const [draft, setDraft] = useState("");
+  const [campaignPlatform, setCampaignPlatform] = useState("Facebook / Instagram");
+  const [campaignObjective, setCampaignObjective] = useState("messages");
+  const [campaignAudience, setCampaignAudience] = useState("");
+  const [campaignTone, setCampaignTone] = useState("Friendly");
+  const [campaignLanguage, setCampaignLanguage] = useState("Urdu");
+  const [campaignResult, setCampaignResult] = useState<ReturnType<typeof makeMarketingCampaign> | null>(null);
   const [saved, setSaved] = useState(false);
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [accountKind, setAccountKind] = useState<"income" | "expense">("income");
@@ -229,10 +235,21 @@ function BusinessManager() {
                 <p className="text-[10px] leading-relaxed text-slate-500">Export downloads a JSON backup to this device. Clear removes only this Business Manager preview data from this browser; it does not delete your main AI Buddy account or other app data.</p>
               </div>}
               {active === "marketing" && <div className="space-y-4">
-                <p className="text-xs leading-relaxed text-slate-400">यह टूल आपके बिज़नेस की जानकारी से मार्केटिंग पोस्ट का ड्राफ्ट बनाता है। पोस्ट अभी अपने-आप सोशल मीडिया पर प्रकाशित नहीं होगी।</p>
-                <label className="block space-y-1 text-xs text-slate-300">Special offer (optional)<input value={offer} onChange={e => setOffer(e.target.value)} placeholder="e.g. 10% off this week" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white" /></label>
-                <button onClick={() => setDraft(makeMarketingDraft(profile, offer))} className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 text-sm font-bold">Create marketing post</button>
-                {draft && <div className="rounded-2xl border border-cyan-300/20 bg-black/20 p-4"><pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-100">{draft}</pre><button onClick={() => navigator.clipboard?.writeText(draft)} className="mt-3 rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold">Copy post</button></div>}
+                <p className="text-xs leading-relaxed text-slate-400">اپنے کاروبار کے لیے مکمل مہم تیار کریں: پوسٹ، کسٹمر ہدف، مقصد اور 7 دن کا مواد پلان۔ یہ ڈرافٹ ہے؛ شائع کرنے سے پہلے خود منظور کریں۔</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1 text-xs text-slate-300">Platform<select value={campaignPlatform} onChange={e=>setCampaignPlatform(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option>Facebook / Instagram</option><option>WhatsApp Status</option><option>TikTok</option><option>YouTube Shorts</option></select></label>
+                  <label className="space-y-1 text-xs text-slate-300">Campaign goal<select value={campaignObjective} onChange={e=>setCampaignObjective(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option value="messages">Get customer messages</option><option value="sales">Get sales / orders</option><option value="awareness">Build awareness</option></select></label>
+                  <label className="space-y-1 text-xs text-slate-300">Target customers<input value={campaignAudience} onChange={e=>setCampaignAudience(e.target.value)} placeholder="e.g. families in Karachi" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /></label>
+                  <label className="space-y-1 text-xs text-slate-300">Writing style<select value={campaignTone} onChange={e=>setCampaignTone(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option>Friendly</option><option>Professional</option><option>Energetic</option><option>Simple and trustworthy</option></select></label>
+                  <label className="space-y-1 text-xs text-slate-300">Language<select value={campaignLanguage} onChange={e=>setCampaignLanguage(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option>Urdu</option><option>Roman Urdu</option><option>English</option></select></label>
+                  <label className="space-y-1 text-xs text-slate-300">Offer (optional)<input value={offer} onChange={e=>setOffer(e.target.value)} placeholder="e.g. 10% discount until Friday" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /></label>
+                </div>
+                <button onClick={() => { const result = makeMarketingCampaign(profile, { platform: campaignPlatform, objective: campaignObjective, audience: campaignAudience, tone: campaignTone, language: campaignLanguage, offer }); setCampaignResult(result); setDraft(result.post); }} className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 text-sm font-bold">Build full marketing campaign</button>
+                {campaignResult && <div className="space-y-4">
+                  <div className="rounded-2xl border border-cyan-300/20 bg-black/20 p-4"><div className="mb-2 flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-semibold text-cyan-200">Campaign post · {campaignResult.platform}</p><span className="rounded-full bg-white/10 px-2 py-1 text-[10px]">{campaignResult.language}</span></div><pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-100">{campaignResult.post}</pre><button onClick={() => navigator.clipboard?.writeText(campaignResult.post)} className="mt-3 rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold">Copy campaign post</button></div>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4"><h3 className="mb-3 text-sm font-semibold">7-day content plan</h3><div className="space-y-2">{campaignResult.schedule.map(item=><div key={item.day} className="flex gap-3 rounded-xl border border-white/5 p-3"><span className="w-14 shrink-0 text-xs font-bold text-cyan-200">{item.day}</span><p className="text-xs leading-relaxed text-slate-300">{item.task}</p></div>)}</div><button onClick={() => navigator.clipboard?.writeText(campaignResult.schedule.map(item=>item.day+": "+item.task).join("\\n"))} className="mt-3 rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold">Copy 7-day plan</button></div>
+                  <p className="text-[10px] leading-relaxed text-amber-200">Publishing, paid ads, scheduled posting and real AI copywriting are not connected yet. This planner creates an editable starter draft only; verify every offer and business detail before posting.</p>
+                </div>}
               </div>}
               {active === "leads" && <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-slate-400">अभी ग्राहक की जानकारी आप यहाँ खुद जोड़ सकते हैं। यह लिस्ट इसी डिवाइस में सेव होगी; अपने-आप इंटरनेट से ग्राहक ढूँढना अभी कनेक्ट नहीं है।</p>
