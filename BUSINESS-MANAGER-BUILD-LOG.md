@@ -66,3 +66,9 @@ A real marketing launch by the target window depends on the owner supplying the 
 4. Connect an approved AI provider and test manager-to-specialist routing with real model responses.
 5. Configure the owner's business details and verified public contact.
 6. Connect approved customer and marketing channels; test consent, message templates, owner handoff, rate limits, and spend controls.
+
+## Further owner workflow — 2026-11-16
+
+- Added an owner-handoff message builder. It prepares a concise enquiry summary for the owner; it does not send a WhatsApp/SMS automatically and does not expose the private owner number.
+- Added Business Manager data export to a JSON file and a separate clear-local-data control with confirmation.
+- These browser-only preview features are not a substitute for authenticated cloud storage, backups, or a production privacy/security review.
