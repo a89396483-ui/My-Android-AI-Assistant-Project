@@ -57,6 +57,10 @@ function BusinessManager() {
   const [accountKind, setAccountKind] = useState<"income" | "expense">("income");
   const [accountAmount, setAccountAmount] = useState("");
   const [accountNote, setAccountNote] = useState("");
+  const [handoffName, setHandoffName] = useState("");
+  const [handoffContact, setHandoffContact] = useState("");
+  const [handoffQuestion, setHandoffQuestion] = useState("");
+  const [handoffCopied, setHandoffCopied] = useState(false);
   const accountSummary = summarizeAccounts(accounts);
   useEffect(() => {
     try {
@@ -220,7 +224,16 @@ function BusinessManager() {
                 {leads.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-xs text-slate-400">No customer records yet.</p> : leads.map(lead=><div key={lead.id} className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-sm font-semibold">{lead.name || "Customer"}</p><p className="mt-1 text-xs text-slate-400">{lead.contact} · {lead.need} · {lead.createdAt}</p></div>)}
               </div>}
               {active === "replies" && <div className="space-y-3"><p className="text-xs text-slate-400">ग्राहक को भेजने से पहले जवाब जाँचें। नीचे आपकी मौजूदा सेवाओं की सूची का नमूना जवाब है।</p><pre className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/20 p-4 font-sans text-sm leading-relaxed">{makeCapabilityReply()}</pre><button onClick={() => navigator.clipboard?.writeText(makeCapabilityReply())} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Copy customer reply</button><p className="text-[11px] text-amber-200">Live WhatsApp / social inbox is not connected yet.</p></div>}
-              {active === "handoff" && <div className="space-y-3"><p className="text-sm font-semibold">Owner contact handoff</p><p className="text-xs leading-relaxed text-slate-400">पहले Settings में अपना निजी नंबर सेव करें। यह नंबर ग्राहकों को अपने-आप नहीं दिखाया जाएगा। लाइव नोटिफिकेशन जोड़ने के बाद गंभीर ग्राहक की जानकारी आपको भेजी जा सकेगी।</p><button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Open owner settings</button></div>}
+              {active === "handoff" && <div className="space-y-4">
+                <p className="text-xs leading-relaxed text-slate-400">ग्राहक की अनुमति से उसकी जानकारी यहाँ दर्ज करें। नीचे मालिक के लिए संदेश तैयार होगा। अभी यह संदेश अपने-आप WhatsApp या SMS से नहीं भेजा जाता।</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <input value={handoffName} onChange={e=>setHandoffName(e.target.value)} placeholder="Customer name" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" />
+                  <input value={handoffContact} onChange={e=>setHandoffContact(e.target.value)} placeholder="Customer contact (with consent)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" />
+                  <textarea value={handoffQuestion} onChange={e=>setHandoffQuestion(e.target.value)} placeholder="What does the customer want to discuss?" className="min-h-24 rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2" />
+                </div>
+                <div className="rounded-2xl border border-cyan-300/20 bg-black/20 p-4"><p className="mb-2 text-xs font-semibold text-cyan-200">Owner handoff message</p><pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">Serious customer enquiry\nName: {handoffName || "Not provided"}\nContact: {handoffContact || "Not provided"}\nRequest: {handoffQuestion || "Not provided"}\nBusiness: {profile.name || "Not configured"}</pre><button onClick={()=>{const msg=`Serious customer enquiry\nName: ${handoffName || "Not provided"}\nContact: ${handoffContact || "Not provided"}\nRequest: ${handoffQuestion || "Not provided"}\nBusiness: ${profile.name || "Not configured"}`; navigator.clipboard?.writeText(msg); setHandoffCopied(true);}} className="mt-3 rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold">Copy owner message</button>{handoffCopied && <p className="mt-2 text-xs text-emerald-300">Message copied if clipboard permission is available.</p>}</div>
+                <button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Open owner settings</button>
+              </div>}
               {active === "accounts" && <div className="space-y-4">
                 <p className="text-xs text-slate-400">अपनी कमाई और खर्च खुद दर्ज करें। रिकॉर्ड अभी इसी डिवाइस में सेव होंगे।</p>
                 <div className="grid grid-cols-3 gap-2">
