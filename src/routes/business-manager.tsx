@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, routeManagerRequest, type BusinessLead, type BusinessProfile } from "@/lib/business-manager";
+import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, routeManagerRequest, type AccountEntry, type BusinessLead, type BusinessProfile, summarizeAccounts } from "@/lib/business-manager";
 import {
   Activity, ArrowLeft, ArrowUpRight, Bot, BriefcaseBusiness, ChartNoAxesCombined,
   CheckCircle2, ChevronRight, CircleHelp, ClipboardList, Contact, FileText,
@@ -53,12 +53,19 @@ function BusinessManager() {
   const [offer, setOffer] = useState("");
   const [draft, setDraft] = useState("");
   const [saved, setSaved] = useState(false);
+  const [accounts, setAccounts] = useState<AccountEntry[]>([]);
+  const [accountKind, setAccountKind] = useState<"income" | "expense">("income");
+  const [accountAmount, setAccountAmount] = useState("");
+  const [accountNote, setAccountNote] = useState("");
+  const accountSummary = summarizeAccounts(accounts);
   useEffect(() => {
     try {
       const storedProfile = localStorage.getItem("ai-buddy-business-profile");
       const storedLeads = localStorage.getItem("ai-buddy-business-leads");
+      const storedAccounts = localStorage.getItem("ai-buddy-business-accounts");
       if (storedProfile) setProfile((current) => ({ ...current, ...JSON.parse(storedProfile) }));
       if (storedLeads) setLeads(JSON.parse(storedLeads));
+      if (storedAccounts) setAccounts(JSON.parse(storedAccounts));
     } catch { /* Ignore invalid local preview data. */ }
   }, []);
   const selected = useMemo(() => modules.find((m) => m.id === active), [active]);
@@ -77,6 +84,16 @@ function BusinessManager() {
       localStorage.setItem("ai-buddy-business-profile", JSON.stringify(profile));
       setSaved(true);
     } catch { setSaved(false); }
+  }
+
+  function addAccountEntry(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const amount = Number(accountAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    const next = [{ id: String(Date.now()), kind: accountKind, amount, note: accountNote.trim(), date: new Date().toLocaleDateString() }, ...accounts];
+    setAccounts(next);
+    try { localStorage.setItem("ai-buddy-business-accounts", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
+    setAccountAmount(""); setAccountNote("");
   }
 
   function addLead(event: FormEvent<HTMLFormElement>) {
@@ -199,7 +216,21 @@ function BusinessManager() {
               </div>}
               {active === "replies" && <div className="space-y-3"><p className="text-xs text-slate-400">ग्राहक को भेजने से पहले जवाब जाँचें। नीचे आपकी मौजूदा सेवाओं की सूची का नमूना जवाब है।</p><pre className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/20 p-4 font-sans text-sm leading-relaxed">{makeCapabilityReply()}</pre><button onClick={() => navigator.clipboard?.writeText(makeCapabilityReply())} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Copy customer reply</button><p className="text-[11px] text-amber-200">Live WhatsApp / social inbox is not connected yet.</p></div>}
               {active === "handoff" && <div className="space-y-3"><p className="text-sm font-semibold">Owner contact handoff</p><p className="text-xs leading-relaxed text-slate-400">पहले Settings में अपना निजी नंबर सेव करें। यह नंबर ग्राहकों को अपने-आप नहीं दिखाया जाएगा। लाइव नोटिफिकेशन जोड़ने के बाद गंभीर ग्राहक की जानकारी आपको भेजी जा सकेगी।</p><button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Open owner settings</button></div>}
-              {active === "accounts" && <div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><p className="text-sm font-semibold text-amber-200">Accounts setup is next</p><p className="mt-1 text-xs leading-relaxed text-slate-300">Income and expense entry will be added next. No financial figures are invented or shown as real.</p></div>}
+              {active === "accounts" && <div className="space-y-4">
+                <p className="text-xs text-slate-400">अपनी कमाई और खर्च खुद दर्ज करें। रिकॉर्ड अभी इसी डिवाइस में सेव होंगे।</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">Income</p><p className="mt-1 text-sm font-bold text-emerald-300">Rs {accountSummary.income.toLocaleString("en-PK")}</p></div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">Expenses</p><p className="mt-1 text-sm font-bold text-rose-300">Rs {accountSummary.expenses.toLocaleString("en-PK")}</p></div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">Balance</p><p className="mt-1 text-sm font-bold text-cyan-200">Rs {accountSummary.balance.toLocaleString("en-PK")}</p></div>
+                </div>
+                <form onSubmit={addAccountEntry} className="grid gap-2 sm:grid-cols-2">
+                  <select value={accountKind} onChange={e=>setAccountKind(e.target.value as "income" | "expense")} className="rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option value="income">Income / آمدنی</option><option value="expense">Expense / خرچ</option></select>
+                  <input type="number" min="1" step="1" value={accountAmount} onChange={e=>setAccountAmount(e.target.value)} placeholder="Amount in PKR" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" />
+                  <input value={accountNote} onChange={e=>setAccountNote(e.target.value)} placeholder="Note (optional)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2" />
+                  <button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-sm font-bold sm:col-span-2">Save account entry</button>
+                </form>
+                {accounts.map(entry=><div key={entry.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-3"><div><p className="text-sm font-semibold">{entry.note || (entry.kind === "income" ? "Income" : "Expense")}</p><p className="text-[10px] text-slate-500">{entry.date}</p></div><p className={`text-sm font-bold ${entry.kind === "income" ? "text-emerald-300" : "text-rose-300"}`}>{entry.kind === "income" ? "+" : "-"}Rs {entry.amount.toLocaleString("en-PK")}</p></div>)}
+              </div>}
               {active === "business" && <div className="space-y-3"><p className="text-xs leading-relaxed text-slate-400">अपने बिज़नेस का नाम, सेवा, इलाका और संपर्क नंबर दर्ज करने के लिए Settings खोलें।</p><button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Set up business profile</button></div>}
               {active === "teacher" && <div className="space-y-3"><p className="text-xs text-slate-400">Business Teacher आपको बिज़नेस शुरू करने, ग्राहक समझने और खर्च का हिसाब बनाने में मार्गदर्शन देगा। AI सलाह वाला लाइव कनेक्शन अगले चरण में जोड़ा जाएगा।</p><p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm">पहला कदम: अपने ग्राहक, सेवा और उनकी समस्या को साफ़-साफ़ लिखें। फिर छोटी लागत में एक ऑफर तैयार करें और नतीजे मापें।</p></div>}
               {active === "orders" && <div className="space-y-3"><p className="text-xs text-slate-400">ऑर्डर ट्रैकिंग अभी तैयार नहीं है। फिलहाल Customer Finder में ग्राहक की जानकारी सुरक्षित रूप से दर्ज कर सकते हैं।</p><button onClick={()=>setActive("leads")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Open customer list</button></div>}
