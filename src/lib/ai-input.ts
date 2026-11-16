@@ -8,7 +8,7 @@ export const chatInput = z.object({
   })).min(1).max(100),
   lang: z.enum(["auto", "ur", "hi", "pa", "en", "roman-ur"]).optional(),
   memories: z.array(z.string().max(200)).max(20).optional(),
-  mode: z.enum(["game"]).optional(),
+  mode: z.enum(["game", "manager"]).optional(),
 });
 
 export const songInput = z.object({
