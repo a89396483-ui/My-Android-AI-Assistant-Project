@@ -73,8 +73,13 @@ function BusinessManager() {
   function askManager(value = question) {
     const clean = value.trim();
     if (!clean) return;
-    setSent(clean);
     setQuestion("");
+    if (/what can you|what do you do|your services|your capabilities|what do you offer/i.test(clean)) {
+      setSent(makeCapabilityReply());
+      setActive("overview");
+      return;
+    }
+    setSent(`I understood: ${clean}. I opened the ${routeManagerRequest(clean)} workspace. This is a local preview; live AI execution is not connected yet.`);
     const target = routeManagerRequest(clean);
     if (target !== "overview") setActive(target);
   }
