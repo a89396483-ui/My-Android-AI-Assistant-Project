@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, routeManagerRequest, type BusinessLead, type BusinessProfile } from "@/lib/business-manager";
 import {
   Activity, ArrowLeft, ArrowUpRight, Bot, BriefcaseBusiness, ChartNoAxesCombined,
   CheckCircle2, ChevronRight, CircleHelp, ClipboardList, Contact, FileText,
@@ -44,6 +45,22 @@ function BusinessManager() {
   const [question, setQuestion] = useState("");
   const [sent, setSent] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [profile, setProfile] = useState<BusinessProfile>({ name: "", service: "", area: "", publicContact: "", ownerContact: "", language: "Urdu" });
+  const [leads, setLeads] = useState<BusinessLead[]>([]);
+  const [leadName, setLeadName] = useState("");
+  const [leadContact, setLeadContact] = useState("");
+  const [leadNeed, setLeadNeed] = useState("");
+  const [offer, setOffer] = useState("");
+  const [draft, setDraft] = useState("");
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    try {
+      const storedProfile = localStorage.getItem("ai-buddy-business-profile");
+      const storedLeads = localStorage.getItem("ai-buddy-business-leads");
+      if (storedProfile) setProfile({ ...profile, ...JSON.parse(storedProfile) });
+      if (storedLeads) setLeads(JSON.parse(storedLeads));
+    } catch { /* Ignore invalid local preview data. */ }
+  }, []);
   const selected = useMemo(() => modules.find((m) => m.id === active), [active]);
 
   function askManager(value = question) {
@@ -51,6 +68,24 @@ function BusinessManager() {
     if (!clean) return;
     setSent(clean);
     setQuestion("");
+    const target = routeManagerRequest(clean);
+    if (target !== "overview") setActive(target);
+  }
+
+  function saveProfile() {
+    try {
+      localStorage.setItem("ai-buddy-business-profile", JSON.stringify(profile));
+      setSaved(true);
+    } catch { setSaved(false); }
+  }
+
+  function addLead(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!leadName.trim() && !leadContact.trim()) return;
+    const next = [{ id: `${Date.now()}`, name: leadName.trim(), contact: leadContact.trim(), need: leadNeed.trim(), createdAt: new Date().toLocaleDateString() }, ...leads];
+    setLeads(next);
+    try { localStorage.setItem("ai-buddy-business-leads", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
+    setLeadName(""); setLeadContact(""); setLeadNeed("");
   }
 
   return (
@@ -133,7 +168,42 @@ function BusinessManager() {
             </>
           ) : (
             <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 sm:p-7">
-              {selected ? <><div className="mb-4 flex items-center gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500"><selected.icon className="size-6" /></span><div><h2 className="text-lg font-bold">{selected.title}</h2><p className="text-xs text-slate-400">{selected.subtitle}</p></div></div><div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><p className="text-sm font-semibold text-amber-200">Setup required</p><p className="mt-1 text-xs leading-relaxed text-slate-300">This workspace is part of the first dashboard build. Its live AI tools and external integrations are not connected yet. We will configure it without changing your existing AI Buddy features.</p></div><button onClick={() => setActive("overview")} className="mt-5 rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold hover:bg-white/15">Back to overview</button></> : <p className="text-sm text-slate-300">This section is being prepared.</p>}
+              {selected && <div className="mb-5 flex items-center gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500"><selected.icon className="size-6" /></span><div><h2 className="text-lg font-bold">{selected.title}</h2><p className="text-xs text-slate-400">{selected.subtitle}</p></div></div>}
+              {active === "settings" && <div className="space-y-4">
+                <p className="text-xs leading-relaxed text-slate-400">अपनी दुकान या बिज़नेस की जानकारी भरें। यह शुरुआती जानकारी इसी ब्राउज़र में सेव होगी; अभी सर्वर या दूसरे फोन से सिंक नहीं होती।</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1 text-xs text-slate-300">Business name<input value={profile.name} onChange={e => setProfile({...profile,name:e.target.value})} placeholder="Your business name" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white" /></label>
+                  <label className="space-y-1 text-xs text-slate-300">Services / products<input value={profile.service} onChange={e => setProfile({...profile,service:e.target.value})} placeholder="What do you sell or provide?" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white" /></label>
+                  <label className="space-y-1 text-xs text-slate-300">Service area<input value={profile.area} onChange={e => setProfile({...profile,area:e.target.value})} placeholder="City or area" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white" /></label>
+                  <label className="space-y-1 text-xs text-slate-300">Public business contact<input value={profile.publicContact} onChange={e => setProfile({...profile,publicContact:e.target.value})} placeholder="Number customers may see" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white" /></label>
+                  <label className="space-y-1 text-xs text-slate-300 sm:col-span-2">Private owner contact (not shared automatically)<input value={profile.ownerContact} onChange={e => setProfile({...profile,ownerContact:e.target.value})} placeholder="Your private number for owner alerts" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white" /></label>
+                </div>
+                <button onClick={saveProfile} className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 text-sm font-bold">Save business profile</button>
+                {saved && <p className="text-xs text-emerald-300">Saved on this device.</p>}
+              </div>}
+              {active === "marketing" && <div className="space-y-4">
+                <p className="text-xs leading-relaxed text-slate-400">यह टूल आपके बिज़नेस की जानकारी से मार्केटिंग पोस्ट का ड्राफ्ट बनाता है। पोस्ट अभी अपने-आप सोशल मीडिया पर प्रकाशित नहीं होगी।</p>
+                <label className="block space-y-1 text-xs text-slate-300">Special offer (optional)<input value={offer} onChange={e => setOffer(e.target.value)} placeholder="e.g. 10% off this week" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white" /></label>
+                <button onClick={() => setDraft(makeMarketingDraft(profile, offer))} className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 text-sm font-bold">Create marketing post</button>
+                {draft && <div className="rounded-2xl border border-cyan-300/20 bg-black/20 p-4"><pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-100">{draft}</pre><button onClick={() => navigator.clipboard?.writeText(draft)} className="mt-3 rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold">Copy post</button></div>}
+              </div>}
+              {active === "leads" && <div className="space-y-4">
+                <p className="text-xs leading-relaxed text-slate-400">अभी ग्राहक की जानकारी आप यहाँ खुद जोड़ सकते हैं। यह लिस्ट इसी डिवाइस में सेव होगी; अपने-आप इंटरनेट से ग्राहक ढूँढना अभी कनेक्ट नहीं है।</p>
+                <form onSubmit={addLead} className="grid gap-2 sm:grid-cols-2">
+                  <input value={leadName} onChange={e=>setLeadName(e.target.value)} placeholder="Customer name" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" />
+                  <input value={leadContact} onChange={e=>setLeadContact(e.target.value)} placeholder="Contact (with permission)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" />
+                  <input value={leadNeed} onChange={e=>setLeadNeed(e.target.value)} placeholder="What does the customer need?" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2" />
+                  <button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-sm font-bold sm:col-span-2">Add customer record</button>
+                </form>
+                {leads.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-xs text-slate-400">No customer records yet.</p> : leads.map(lead=><div key={lead.id} className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-sm font-semibold">{lead.name || "Customer"}</p><p className="mt-1 text-xs text-slate-400">{lead.contact} · {lead.need} · {lead.createdAt}</p></div>)}
+              </div>}
+              {active === "replies" && <div className="space-y-3"><p className="text-xs text-slate-400">ग्राहक को भेजने से पहले जवाब जाँचें। नीचे आपकी मौजूदा सेवाओं की सूची का नमूना जवाब है।</p><pre className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/20 p-4 font-sans text-sm leading-relaxed">{makeCapabilityReply()}</pre><button onClick={() => navigator.clipboard?.writeText(makeCapabilityReply())} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Copy customer reply</button><p className="text-[11px] text-amber-200">Live WhatsApp / social inbox is not connected yet.</p></div>}
+              {active === "handoff" && <div className="space-y-3"><p className="text-sm font-semibold">Owner contact handoff</p><p className="text-xs leading-relaxed text-slate-400">पहले Settings में अपना निजी नंबर सेव करें। यह नंबर ग्राहकों को अपने-आप नहीं दिखाया जाएगा। लाइव नोटिफिकेशन जोड़ने के बाद गंभीर ग्राहक की जानकारी आपको भेजी जा सकेगी।</p><button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Open owner settings</button></div>}
+              {active === "accounts" && <div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><p className="text-sm font-semibold text-amber-200">Accounts setup is next</p><p className="mt-1 text-xs leading-relaxed text-slate-300">Income and expense entry will be added next. No financial figures are invented or shown as real.</p></div>}
+              {active === "business" && <div className="space-y-3"><p className="text-xs leading-relaxed text-slate-400">अपने बिज़नेस का नाम, सेवा, इलाका और संपर्क नंबर दर्ज करने के लिए Settings खोलें।</p><button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Set up business profile</button></div>}
+              {active === "teacher" && <div className="space-y-3"><p className="text-xs text-slate-400">Business Teacher आपको बिज़नेस शुरू करने, ग्राहक समझने और खर्च का हिसाब बनाने में मार्गदर्शन देगा। AI सलाह वाला लाइव कनेक्शन अगले चरण में जोड़ा जाएगा।</p><p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm">पहला कदम: अपने ग्राहक, सेवा और उनकी समस्या को साफ़-साफ़ लिखें। फिर छोटी लागत में एक ऑफर तैयार करें और नतीजे मापें।</p></div>}
+              {active === "orders" && <div className="space-y-3"><p className="text-xs text-slate-400">ऑर्डर ट्रैकिंग अभी तैयार नहीं है। फिलहाल Customer Finder में ग्राहक की जानकारी सुरक्षित रूप से दर्ज कर सकते हैं।</p><button onClick={()=>setActive("leads")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Open customer list</button></div>}
+              <button onClick={() => setActive("overview")} className="mt-6 rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold hover:bg-white/15">Back to overview</button>
             </div>
           )}
 
