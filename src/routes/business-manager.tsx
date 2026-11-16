@@ -88,6 +88,22 @@ function BusinessManager() {
     if (target !== "overview") setActive(target);
   }
 
+  function exportBusinessData() {
+    const payload = { profile, leads, accounts, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url; anchor.download = "ai-buddy-business-data.json"; anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearBusinessData() {
+    if (!window.confirm("Delete this device’s saved Business Manager profile, leads and accounts?")) return;
+    for (const key of ["ai-buddy-business-profile", "ai-buddy-business-leads", "ai-buddy-business-accounts"]) localStorage.removeItem(key);
+    setProfile({ name: "", service: "", area: "", publicContact: "", ownerContact: "", language: "Urdu" });
+    setLeads([]); setAccounts([]); setSaved(false);
+  }
+
   function saveProfile() {
     try {
       localStorage.setItem("ai-buddy-business-profile", JSON.stringify(profile));
@@ -206,6 +222,11 @@ function BusinessManager() {
                 </div>
                 <button onClick={saveProfile} className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 text-sm font-bold">Save business profile</button>
                 {saved && <p className="text-xs text-emerald-300">Saved on this device.</p>}
+                <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                  <button onClick={exportBusinessData} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Export my data</button>
+                  <button onClick={clearBusinessData} className="rounded-xl border border-rose-300/20 bg-rose-300/5 px-4 py-3 text-xs font-semibold text-rose-200">Clear saved business data</button>
+                </div>
+                <p className="text-[10px] leading-relaxed text-slate-500">Export downloads a JSON backup to this device. Clear removes only this Business Manager preview data from this browser; it does not delete your main AI Buddy account or other app data.</p>
               </div>}
               {active === "marketing" && <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-slate-400">यह टूल आपके बिज़नेस की जानकारी से मार्केटिंग पोस्ट का ड्राफ्ट बनाता है। पोस्ट अभी अपने-आप सोशल मीडिया पर प्रकाशित नहीं होगी।</p>
