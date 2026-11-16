@@ -185,3 +185,90 @@ export function getCustomerProspectingPlan(area = "Karachi") {
     outreach: `Hello! We help with ${segment.offer.toLowerCase()}. I noticed your work may involve this kind of task. Would you like to see a small sample? No pressure. If not relevant, we will not follow up.`,
   }));
 }
+
+
+export type ViralCampaignInput = {
+  type: "business" | "music";
+  name: string;
+  audience: string;
+  platform: string;
+  language: string;
+  goal: string;
+  details: string;
+  callToAction: string;
+  rightsConfirmed: boolean;
+};
+
+export function buildViralCampaign(input: ViralCampaignInput) {
+  const name = input.name.trim() || (input.type === "music" ? "New song" : "Our business");
+  const audience = input.audience.trim() || "people interested in this topic";
+  const details = input.details.trim() || (input.type === "music" ? "a short preview of the song" : "a real demonstration of the service");
+  const cta = input.callToAction.trim() || (input.type === "music" ? "Listen and share if you like it" : "Message us to learn more");
+  const music = input.type === "music";
+  const hooks = music
+    ? [`“Wait for the line that says it all…” — ${name}`, `A 10-second feeling for anyone who has lived this story.`, `Which part should become the full video: the hook or the chorus?`]
+    : [`“Still struggling with this? Watch this.”`, `One common problem. One clear, practical solution.`, `Here is what changes when you do this the simpler way.`];
+  const script = [
+    `0–2 sec — HOOK: ${hooks[0]}`,
+    music ? `2–7 sec — PLAY: use an authorized 5–10 second song excerpt; show the title and artist clearly.` : `2–7 sec — SHOW: demonstrate the real problem, without exaggerated claims.`,
+    `7–18 sec — STORY: ${details}`,
+    music ? `18–25 sec — INVITE: ask viewers which lyric or moment they remember.` : `18–25 sec — PROOF: show a real example or explain one useful detail.`,
+    `Final — CTA: ${cta}`,
+  ].join("\\n");
+  const caption = music
+    ? `${name} 🎧\\nA small preview for ${audience}. Listen, tell us your favourite moment, and share it with someone who may connect with it.\\n${cta}`
+    : `${name} ✨\\nMade for ${audience}. ${details}\\n${cta}`;
+  const experiments = [
+    "Version A: emotional / problem-first opening",
+    "Version B: question / curiosity opening",
+    "Version C: direct demonstration / strongest moment first",
+  ];
+  return {
+    title: name,
+    type: input.type,
+    platform: input.platform,
+    audience,
+    hooks,
+    script,
+    caption,
+    experiments,
+    rightsNote: music
+      ? input.rightsConfirmed
+        ? "Rights confirmation marked by owner. Keep proof of ownership/licence and follow each platform's music rules."
+        : "Do not publish yet: confirm ownership or written permission for the recording, composition, vocals, artwork and any samples."
+      : "Use genuine demonstrations, customer permissions and accurate claims.",
+    publishNote: "Draft only. Owner review and approval are required before publishing. No platform is connected or auto-publishing from this preview.",
+  };
+}
+
+export type CampaignMetrics = {
+  views: number;
+  averageWatchSeconds: number;
+  shares: number;
+  saves: number;
+  comments: number;
+  inquiries: number;
+};
+
+export function reviewCampaignMetrics(metrics: CampaignMetrics) {
+  const signals = [
+    { label: "Views", value: metrics.views },
+    { label: "Average watch (sec)", value: metrics.averageWatchSeconds },
+    { label: "Shares", value: metrics.shares },
+    { label: "Saves", value: metrics.saves },
+    { label: "Comments", value: metrics.comments },
+    { label: "Inquiries / listens", value: metrics.inquiries },
+  ];
+  const interactions = metrics.shares + metrics.saves + metrics.comments;
+  const engagement = metrics.views > 0 ? (interactions / metrics.views) * 100 : 0;
+  const advice = metrics.views === 0
+    ? "Add the results after the post has been published; do not guess missing numbers."
+    : metrics.averageWatchSeconds < 5
+      ? "Test a clearer first 1–2 seconds and show the strongest moment earlier."
+      : metrics.shares + metrics.saves === 0
+        ? "Make the clip more useful or emotionally relatable, then test a clearer share/save reason."
+        : metrics.inquiries === 0
+          ? "Keep the creative idea, but make the next-step invitation clearer and easier."
+          : "Repeat the strongest angle with a fresh opening; track whether qualified inquiries continue.";
+  return { signals, engagement, advice };
+}
