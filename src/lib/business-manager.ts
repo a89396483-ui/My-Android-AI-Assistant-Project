@@ -65,3 +65,17 @@ export function routeManagerRequest(message: string) {
   if (/teach|learn|business idea|start business/.test(value)) return "teacher";
   return "overview";
 }
+
+export type AccountEntry = {
+  id: string;
+  kind: "income" | "expense";
+  amount: number;
+  note: string;
+  date: string;
+};
+
+export function summarizeAccounts(entries: AccountEntry[]) {
+  const income = entries.filter((entry) => entry.kind === "income").reduce((sum, entry) => sum + entry.amount, 0);
+  const expenses = entries.filter((entry) => entry.kind === "expense").reduce((sum, entry) => sum + entry.amount, 0);
+  return { income, expenses, balance: income - expenses };
+}
