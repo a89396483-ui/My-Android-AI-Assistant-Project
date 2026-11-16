@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeCapabilityReply, makeMarketingCampaign, makeMarketingDraft, routeManagerRequest, summarizeAccounts, type BusinessProfile } from "./business-manager";
+import { buildSocialChannelPosts, getCustomerProspectingPlan, makeCapabilityReply, makeMarketingCampaign, makeMarketingDraft, routeManagerRequest, summarizeAccounts, type BusinessProfile } from "./business-manager";
 
 const profile: BusinessProfile = {
   name: "Ashraf Services",
@@ -43,6 +43,28 @@ describe("Business Manager helpers", () => {
     expect(campaign.audience).toBe("families in Karachi");
     expect(campaign.schedule).toHaveLength(7);
     expect(campaign.schedule[0].day).toBe("Day 1");
+  });
+
+
+  it("creates separate post formats for the main social channels", () => {
+    const posts = buildSocialChannelPosts({
+      businessName: "AI Buddy",
+      services: "CVs, document files and social marketing",
+      area: "Karachi",
+      publicContact: "Public page inbox",
+      offer: "Free sample",
+      language: "English",
+    });
+    expect(posts.map((post) => post.id)).toEqual(["facebook", "instagram", "x", "tiktok", "youtube", "whatsapp"]);
+    expect(posts.find((post) => post.id === "facebook")?.text).toContain("AI Buddy");
+    expect(posts.find((post) => post.id === "tiktok")?.text).toContain("Hook:");
+  });
+
+  it("provides customer segments and consent-respecting intro drafts", () => {
+    const plan = getCustomerProspectingPlan("Lahore");
+    expect(plan.length).toBeGreaterThanOrEqual(4);
+    expect(plan[0].searches[0]).toContain("Lahore");
+    expect(plan[0].outreach).toContain("No pressure");
   });
 
   it("summarizes income, expenses and balance", () => {
