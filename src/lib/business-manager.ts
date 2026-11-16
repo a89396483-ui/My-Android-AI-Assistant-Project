@@ -120,3 +120,68 @@ export function makeMarketingCampaign(profile: BusinessProfile, brief: Marketing
   ];
   return { post, platform: brief.platform, objective: brief.objective, audience: brief.audience.trim() || "Local customers", tone: brief.tone, language: brief.language, schedule };
 }
+
+
+export const SOCIAL_CHANNELS = [
+  { id: "facebook", label: "Facebook", format: "Community post", guidance: "Use a clear service benefit, local area and message call-to-action." },
+  { id: "instagram", label: "Instagram", format: "Caption + Reel idea", guidance: "Lead with a short hook, then benefits and a few relevant hashtags." },
+  { id: "x", label: "X (Twitter)", format: "Short post", guidance: "Keep it concise, specific and conversation-friendly." },
+  { id: "tiktok", label: "TikTok", format: "Short-video script", guidance: "Start with a problem in the first seconds, show the result and invite a question." },
+  { id: "youtube", label: "YouTube", format: "Shorts title + description", guidance: "Use a searchable title and explain the practical result." },
+  { id: "whatsapp", label: "WhatsApp Status", format: "Status sequence", guidance: "Use short slides with one service and one call-to-action each." },
+] as const;
+
+export type SocialCampaignInput = {
+  businessName: string;
+  services: string;
+  area: string;
+  publicContact: string;
+  offer: string;
+  language: string;
+};
+
+export function buildSocialChannelPosts(input: SocialCampaignInput) {
+  const name = input.businessName.trim() || "AI Buddy";
+  const services = input.services.trim() || "AI-powered help with everyday digital tasks";
+  const area = input.area.trim();
+  const contact = input.publicContact.trim() || "Message this page for details";
+  const offer = input.offer.trim();
+  const lang = input.language;
+  const intro = lang === "Urdu"
+    ? `${name} کے ساتھ اپنے ڈیجیٹل کام آسان بنائیں!`
+    : lang === "Roman Urdu"
+      ? `${name} ke saath apne digital kaam asaan banayein!`
+      : `Make everyday digital work easier with ${name}!`;
+  const detail = lang === "Urdu"
+    ? `ہم مدد کرتے ہیں: ${services}۔`
+    : lang === "Roman Urdu"
+      ? `Hum madad karte hain: ${services}.`
+      : `We can help with: ${services}.`;
+  const areaLine = area ? (lang === "Urdu" ? `علاقہ: ${area}` : `Area: ${area}`) : "";
+  const offerLine = offer ? (lang === "Urdu" ? `خاص آفر: ${offer}` : `Offer: ${offer}`) : "";
+  const cta = lang === "Urdu" ? `تفصیل کے لیے رابطہ کریں: ${contact}` : `Contact us: ${contact}`;
+  const base = [intro, detail, areaLine, offerLine, cta].filter(Boolean).join("\\n\\n");
+  return [
+    { id: "facebook", label: "Facebook", format: "Community post", text: `${base}\\n\\n#SmallBusiness #DigitalHelp #AIBuddy` },
+    { id: "instagram", label: "Instagram", format: "Caption + Reel idea", text: `✨ ${intro}\\n\\n${detail}\\n${offerLine}\\n${cta}\\n\\n#AIBuddy #DigitalServices #WorkSmart #SmallBusiness\\n\\nReel idea: show a common task, then show how AI Buddy helps prepare it.` },
+    { id: "x", label: "X (Twitter)", format: "Short post", text: `${name}: ${services}. ${offerLine} ${contact} #AIBuddy`.trim() },
+    { id: "tiktok", label: "TikTok", format: "Short-video script", text: `Hook: "Still doing this digital task the hard way?"\\nShow: ${services}.\\nExplain: AI Buddy helps prepare the work; review the result before using it.\\nCTA: ${contact}\\nCaption: ${intro}` },
+    { id: "youtube", label: "YouTube Shorts", format: "Title + description", text: `Title: How AI Buddy helps with ${services}\\n\\nDescription: ${base}\\n\\n#Shorts #AIBuddy` },
+    { id: "whatsapp", label: "WhatsApp Status", format: "3-slide status", text: `Slide 1: ${intro}\\nSlide 2: ${detail}\\nSlide 3: ${offerLine || cta}\\nReply/message: ${contact}` },
+  ];
+}
+
+export const CUSTOMER_SEGMENTS = [
+  { id: "documents", title: "CV and document help", who: "Job seekers, students and people who need a CV, application letter, forms or formatted files.", need: "Prepare or improve a document quickly.", searches: ["Karachi job seekers groups", "students needing CV help Karachi", "small businesses needing document formatting"], offer: "CV, application and document preparation support" },
+  { id: "small-business", title: "Small business marketing", who: "Shopkeepers, home businesses, service providers and local sellers.", need: "Social posts, offers, captions and customer replies.", searches: ["Karachi small business owners", "home businesses Karachi", "local service providers Karachi"], offer: "Affordable social media content and marketing drafts" },
+  { id: "job-business", title: "Recruitment and job advertisers", who: "Recruiters, training centres and businesses that publish genuine job vacancies.", need: "Clear job ads, vacancy graphics text and application information.", searches: ["Karachi recruitment agencies", "Karachi training institutes hiring", "businesses posting job vacancies Karachi"], offer: "Job advertisement writing and recruitment post preparation" },
+  { id: "creators", title: "Creators and freelancers", who: "Content creators, freelancers and small agencies.", need: "Content ideas, scripts, profiles and promotional material.", searches: ["Karachi freelancers", "Pakistan content creators", "small digital agencies Pakistan"], offer: "Content ideas, scripts and promotional copy" },
+] as const;
+
+export function getCustomerProspectingPlan(area = "Karachi") {
+  return CUSTOMER_SEGMENTS.map((segment) => ({
+    ...segment,
+    searches: segment.searches.map((query) => query.replaceAll("Karachi", area)),
+    outreach: `Hello! We help with ${segment.offer.toLowerCase()}. I noticed your work may involve this kind of task. Would you like to see a small sample? No pressure. If not relevant, we will not follow up.`,
+  }));
+}
