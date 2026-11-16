@@ -16,13 +16,13 @@ export type BusinessLead = {
 };
 
 export const BUSINESS_CAPABILITIES = [
-  "Marketing posts and campaign drafts",
-  "Business information and service FAQs",
-  "Customer enquiry handling and lead qualification",
-  "Lead and order record keeping",
-  "Owner handoff for serious enquiries",
-  "Basic income and expense records",
-  "Business planning and coaching",
+  "Marketing content and campaign drafts",
+  "Business information and FAQ reply drafts",
+  "Manual customer enquiry records",
+  "Lead notes and order enquiry records",
+  "Owner handoff planning for serious enquiries",
+  "On-device income and expense records",
+  "Basic business planning tips",
 ] as const;
 
 export function makeCapabilityReply(enabled: string[] = [...BUSINESS_CAPABILITIES]) {
