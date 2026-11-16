@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSocialChannelPosts, getCustomerProspectingPlan, makeCapabilityReply, makeMarketingCampaign, makeMarketingDraft, routeManagerRequest, summarizeAccounts, type BusinessProfile } from "./business-manager";
+import { buildSocialChannelPosts, buildViralCampaign, reviewCampaignMetrics, getCustomerProspectingPlan, makeCapabilityReply, makeMarketingCampaign, makeMarketingDraft, routeManagerRequest, summarizeAccounts, type BusinessProfile } from "./business-manager";
 
 const profile: BusinessProfile = {
   name: "Ashraf Services",
