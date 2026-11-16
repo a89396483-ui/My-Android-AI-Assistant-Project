@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, makeMarketingCampaign, buildSocialChannelPosts, getCustomerProspectingPlan, routeManagerRequest, type AccountEntry, type BusinessLead, type BusinessProfile, summarizeAccounts } from "@/lib/business-manager";
+import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, makeMarketingCampaign, buildSocialChannelPosts, buildViralCampaign, reviewCampaignMetrics, getCustomerProspectingPlan, routeManagerRequest, type AccountEntry, type BusinessLead, type BusinessProfile, summarizeAccounts } from "@/lib/business-manager";
 import {
   Activity, ArrowLeft, ArrowUpRight, Bot, BriefcaseBusiness, ChartNoAxesCombined,
   CheckCircle2, ChevronRight, CircleHelp, ClipboardList, Contact, FileText,
@@ -59,6 +59,16 @@ function BusinessManager() {
   const [campaignLanguage, setCampaignLanguage] = useState("Urdu");
   const [campaignResult, setCampaignResult] = useState<ReturnType<typeof makeMarketingCampaign> | null>(null);
   const [socialPosts, setSocialPosts] = useState<ReturnType<typeof buildSocialChannelPosts>>([]);
+  const [viralType, setViralType] = useState<"business" | "music">("business");
+  const [viralName, setViralName] = useState("");
+  const [viralAudience, setViralAudience] = useState("");
+  const [viralDetails, setViralDetails] = useState("");
+  const [viralCta, setViralCta] = useState("");
+  const [viralRights, setViralRights] = useState(false);
+  const [viralResult, setViralResult] = useState<ReturnType<typeof buildViralCampaign> | null>(null);
+  const [metricValues, setMetricValues] = useState({ views: "0", averageWatchSeconds: "0", shares: "0", saves: "0", comments: "0", inquiries: "0" });
+  const metricReview = reviewCampaignMetrics(Object.fromEntries(Object.entries(metricValues).map(([key,value])=>[key,Math.max(0,Number(value)||0)])) as Parameters<typeof reviewCampaignMetrics>[0]);
+
   const [prospectArea, setProspectArea] = useState("Karachi");
   const prospectingPlan = getCustomerProspectingPlan(prospectArea);
   const [saved, setSaved] = useState(false);
@@ -253,6 +263,31 @@ function BusinessManager() {
                 </div>
                 {campaignResult && <div className="rounded-2xl border border-white/10 bg-black/20 p-4"><p className="mb-2 text-xs font-semibold text-cyan-200">Campaign brief · {campaignResult.platform}</p><p className="text-xs text-slate-300">Goal: {campaignResult.objective} · Audience: {campaignResult.audience} · Tone: {campaignResult.tone}</p><div className="mt-3 space-y-2">{campaignResult.schedule.map(item=><div key={item.day} className="rounded-xl border border-white/5 p-3 text-xs"><b className="text-cyan-200">{item.day}</b> — {item.task}</div>)}</div></div>}
                 {socialPosts.length > 0 && <div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">Ready-to-review social posts</h3><button onClick={()=>navigator.clipboard?.writeText(socialPosts.map(p=>p.label+"\\n"+p.text).join("\\n\\n----------------\\n\\n"))} className="rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold">Copy all posts</button></div>{socialPosts.map(post=><div key={post.id} className="rounded-2xl border border-white/10 bg-black/20 p-4"><div className="mb-2 flex items-center justify-between gap-2"><div><p className="text-sm font-semibold">{post.label}</p><p className="text-[10px] text-slate-500">{post.format}</p></div><button onClick={()=>navigator.clipboard?.writeText(post.text)} className="rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold">Copy</button></div><pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-200">{post.text}</pre></div>)}</div>}
+                <section className="space-y-4 rounded-2xl border border-fuchsia-300/20 bg-gradient-to-br from-fuchsia-500/10 to-cyan-500/10 p-4">
+                  <div><p className="text-sm font-bold text-fuchsia-200">Viral Growth Studio · Business + Music</p><p className="mt-1 text-xs leading-relaxed text-slate-300">صرف پوسٹ نہیں—hook، short-video script، caption اور اگلے تجربے تیار کریں۔ وائرل ہونے کی ضمانت نہیں؛ ہر پوسٹ کے حقیقی نتائج سے سیکھیں۔</p></div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="space-y-1 text-xs text-slate-300">Campaign type<select value={viralType} onChange={e=>{setViralType(e.target.value as "business"|"music");setViralResult(null);}} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option value="business">Business / product</option><option value="music">Song / music promotion</option></select></label>
+                    <label className="space-y-1 text-xs text-slate-300">Campaign name<input value={viralName} onChange={e=>setViralName(e.target.value)} placeholder={viralType==="music"?"Song title · artist":"Business / service name"} className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/></label>
+                    <label className="space-y-1 text-xs text-slate-300">Target audience<input value={viralAudience} onChange={e=>setViralAudience(e.target.value)} placeholder={viralType==="music"?"Punjabi music fans, sad-song listeners":"Shopkeepers, local customers"} className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/></label>
+                    <label className="space-y-1 text-xs text-slate-300">Platform<select value={campaignPlatform} onChange={e=>setCampaignPlatform(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option>All platforms</option><option>TikTok</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Facebook</option><option>WhatsApp Status</option></select></label>
+                    <label className="space-y-1 text-xs text-slate-300 sm:col-span-2">{viralType==="music"?"Song moment / mood / story":"Real customer problem / service demo"}<textarea value={viralDetails} onChange={e=>setViralDetails(e.target.value)} placeholder={viralType==="music"?"Describe the strongest lyric, chorus, mood or story (do not paste copyrighted lyrics unless you own them).":"Describe one real problem and how your service helps."} className="min-h-20 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/></label>
+                    <label className="space-y-1 text-xs text-slate-300 sm:col-span-2">Call to action<input value={viralCta} onChange={e=>setViralCta(e.target.value)} placeholder={viralType==="music"?"Listen, save and share":"Message for details"} className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/></label>
+                  </div>
+                  {viralType==="music" && <label className="flex items-start gap-2 text-xs text-slate-300"><input type="checkbox" checked={viralRights} onChange={e=>setViralRights(e.target.checked)} className="mt-0.5"/> I own or have written permission for the recording, composition, vocals, artwork and samples used.</label>}
+                  <button onClick={()=>setViralResult(buildViralCampaign({type:viralType,name:viralName,audience:viralAudience,platform:campaignPlatform,language:campaignLanguage,goal:campaignObjective,details:viralDetails,callToAction:viralCta,rightsConfirmed:viralRights}))} className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-4 py-3 text-sm font-bold">Create viral video plan</button>
+                  {viralResult && <div className="space-y-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                    <div><p className="text-xs font-semibold text-cyan-200">3 opening hooks to test</p>{viralResult.hooks.map((hook,index)=><p key={index} className="mt-2 text-xs text-slate-200">{index+1}. {hook}</p>)}</div>
+                    <div><p className="text-xs font-semibold text-cyan-200">Short-video script</p><pre className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-200">{viralResult.script}</pre></div>
+                    <div><p className="text-xs font-semibold text-cyan-200">Caption</p><pre className="mt-2 whitespace-pre-wrap font-sans text-xs text-slate-200">{viralResult.caption}</pre></div>
+                    <div><p className="text-xs font-semibold text-cyan-200">3 experiments</p>{viralResult.experiments.map((item,index)=><p key={index} className="mt-1 text-xs text-slate-300">{index+1}. {item}</p>)}</div>
+                    <p className="text-xs text-amber-200">{viralResult.rightsNote}</p><p className="text-xs text-amber-200">{viralResult.publishNote}</p>
+                    <button onClick={()=>navigator.clipboard?.writeText(viralResult.hooks.join("\\n\\n")+ "\\n\\n"+viralResult.script+"\\n\\n"+viralResult.caption)} className="rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold">Copy video plan</button>
+                  </div>}
+                  <div className="border-t border-white/10 pt-3"><p className="text-xs font-semibold text-cyan-200">After publishing: learn from real results</p><p className="mt-1 text-[11px] text-slate-400">Enter the numbers shown by the platform. This preview calculates a simple interaction rate and suggests the next test.</p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{(["views","averageWatchSeconds","shares","saves","comments","inquiries"] as const).map(key=><label key={key} className="space-y-1 text-[10px] text-slate-400">{({views:"Views",averageWatchSeconds:"Avg watch sec",shares:"Shares",saves:"Saves",comments:"Comments",inquiries:"Inquiries / listens"})[key]}<input type="number" min="0" value={metricValues[key]} onChange={e=>setMetricValues(v=>({...v,[key]:e.target.value}))} className="w-full rounded-lg border border-white/10 bg-slate-950 p-2 text-sm text-white"/></label>)}</div>
+                    <p className="text-xs text-cyan-100">Interaction rate: {metricReview.engagement.toFixed(2)}%</p><p className="text-xs text-slate-300">{metricReview.advice}</p>
+                  </div>
+                </section>
                 <p className="text-[10px] leading-relaxed text-amber-200">یہ پوسٹس ابھی تیار اور کاپی ہوتی ہیں، خود بخود شائع نہیں ہوتیں۔ Facebook/Instagram، X، TikTok، YouTube اور WhatsApp پر خودکار اشاعت کے لیے ہر پلیٹ فارم کا آفیشل API، اکاؤنٹ اجازت اور ٹیسٹنگ درکار ہے۔</p>
               </div>}
               {active === "leads" && <div className="space-y-4">
