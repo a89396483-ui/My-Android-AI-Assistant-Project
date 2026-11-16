@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { BUSINESS_CAPABILITIES, makeCapabilityReply, makeMarketingDraft, routeManagerRequest, type BusinessLead, type BusinessProfile } from "@/lib/business-manager";
 import {
   Activity, ArrowLeft, ArrowUpRight, Bot, BriefcaseBusiness, ChartNoAxesCombined,
@@ -57,7 +57,7 @@ function BusinessManager() {
     try {
       const storedProfile = localStorage.getItem("ai-buddy-business-profile");
       const storedLeads = localStorage.getItem("ai-buddy-business-leads");
-      if (storedProfile) setProfile({ ...profile, ...JSON.parse(storedProfile) });
+      if (storedProfile) setProfile((current) => ({ ...current, ...JSON.parse(storedProfile) }));
       if (storedLeads) setLeads(JSON.parse(storedLeads));
     } catch { /* Ignore invalid local preview data. */ }
   }, []);
@@ -79,7 +79,7 @@ function BusinessManager() {
     } catch { setSaved(false); }
   }
 
-  function addLead(event: React.FormEvent<HTMLFormElement>) {
+  function addLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!leadName.trim() && !leadContact.trim()) return;
     const next = [{ id: `${Date.now()}`, name: leadName.trim(), contact: leadContact.trim(), need: leadNeed.trim(), createdAt: new Date().toLocaleDateString() }, ...leads];
