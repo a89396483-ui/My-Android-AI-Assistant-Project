@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeCapabilityReply, makeMarketingDraft, routeManagerRequest, type BusinessProfile } from "./business-manager";
+import { makeCapabilityReply, makeMarketingDraft, routeManagerRequest, summarizeAccounts, type BusinessProfile } from "./business-manager";
 
 const profile: BusinessProfile = {
   name: "Ashraf Services",
@@ -25,6 +25,13 @@ describe("Business Manager helpers", () => {
     expect(draft).toContain("Karachi");
     expect(draft).toContain("10% off this week");
     expect(draft).toContain("0300-0000000");
+  });
+
+  it("summarizes income, expenses and balance", () => {
+    expect(summarizeAccounts([
+      { id: "1", kind: "income", amount: 5000, note: "Sale", date: "today" },
+      { id: "2", kind: "expense", amount: 1200, note: "Stock", date: "today" },
+    ])).toEqual({ income: 5000, expenses: 1200, balance: 3800 });
   });
 
   it("lists only the capabilities passed to the customer reply", () => {
