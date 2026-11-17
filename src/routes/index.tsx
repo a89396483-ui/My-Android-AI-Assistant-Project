@@ -35,15 +35,26 @@ function Home() {
   const [image, setImage] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
 
-  const [memories, setMemories] = useState<string[]>([]);\n  const [storageReady, setStorageReady] = useState(false);
+  const [memories, setMemories] = useState<string[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
   const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-60))); }, [messages]);
-  useEffect(() => { localStorage.setItem(MEMORY_KEY, JSON.stringify(memories.slice(0, 20))); }, [memories]);
+  useEffect(() => {
+    setMessages(readStored<Message[]>(STORAGE_KEY, []));
+    setMemories(readStored<string[]>(MEMORY_KEY, []));
+    setStorageReady(true);
+  }, []);
+  useEffect(() => {
+    if (storageReady) localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-60)));
+  }, [messages, storageReady]);
+  useEffect(() => {
+    if (storageReady) localStorage.setItem(MEMORY_KEY, JSON.stringify(memories.slice(0, 20)));
+  }, [memories, storageReady]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, busy]);
 
   useEffect(() => () => {
