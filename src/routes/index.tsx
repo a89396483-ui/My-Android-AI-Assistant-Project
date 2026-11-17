@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Camera, ImagePlus, Mic, Send, Trash2, Volume2, Square, Music, Gamepad2, Sparkles, X } from "lucide-react";
+import { ImagePlus, Mic, Send, Trash2, Volume2, Square, Music, Gamepad2, Sparkles, X } from "lucide-react";
 import { Toaster, toast } from "sonner";
 
 type Message = { role: "user" | "assistant"; text: string; image?: string };
@@ -28,14 +28,14 @@ function readStored<T,>(key: string, fallback: T): T {
 }
 
 function Home() {
-  const [messages, setMessages] = useState<Message[]>(() => typeof window === "undefined" ? [] : readStored(STORAGE_KEY, []));
+  const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [language, setLanguage] = useState<Language>("auto");
   const [mode, setMode] = useState<"chat" | "game">("chat");
   const [image, setImage] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
-  const [memories, setMemories] = useState<string[]>(() => typeof window === "undefined" ? [] : readStored(MEMORY_KEY, []));
+
+  const [memories, setMemories] = useState<string[]>([]);\n  const [storageReady, setStorageReady] = useState(false);
   const [listening, setListening] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
