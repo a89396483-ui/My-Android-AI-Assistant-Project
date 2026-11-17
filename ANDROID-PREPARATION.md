@@ -24,3 +24,12 @@ Before implementation, verify Capacitor's HTTPS origin and navigation restrictio
 4. Week 4: regression checks, source backup and release review; publish only with permission.
 
 This is a target and handoff, not an autonomous scheduled service. Work continues when the owner returns to this conversation. No guarantee of free AI singing: it is currently lyrics-only, read-aloud and own-voice recording.
+
+## Current implementation update — 2026-11-17
+
+- Added `capacitor.config.ts` on the feature branch.
+- Initial app ID is `com.ashraf.aibuddy`; display name is `AI Buddy`. Owner must confirm these before release.
+- The wrapper points to the existing hosted website and keeps API secrets on the server.
+- This configuration alone is NOT an Android project and cannot produce an APK.
+- Still required: add matching Capacitor packages to `package.json`, install dependencies, generate the native Android platform with Capacitor, add and verify microphone/camera/voice handling, run Android SDK build, and test on a real phone.
+- No signing key, APK, build, deployment, merge, or paid service has been created or used.
