@@ -79,4 +79,28 @@ describe("Business Manager helpers", () => {
     expect(reply).toContain("Customer enquiry handling");
     expect(reply).not.toContain("Marketing posts");
   });
+
+  it("uses real line breaks in generated marketing drafts and channel posts", () => {
+    const campaign = makeMarketingCampaign(profile, {
+      platform: "Facebook",
+      objective: "messages",
+      audience: "local customers",
+      tone: "Friendly",
+      language: "English",
+      offer: "10% off",
+    });
+    const social = buildSocialChannelPosts({
+      businessName: "AI Buddy",
+      services: "document help",
+      area: "Karachi",
+      publicContact: "Page inbox",
+      offer: "Free sample",
+      language: "English",
+    });
+    expect(campaign.post).toContain("\n");
+    expect(campaign.post).not.toContain("\\n");
+    expect(social[0].text).toContain("\n");
+    expect(social[0].text).not.toContain("\\n");
+    expect(social[3].text).toContain("\n");
+  });
 });
