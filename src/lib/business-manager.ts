@@ -108,7 +108,7 @@ export function makeMarketingCampaign(profile: BusinessProfile, brief: Marketing
     contactLine,
     languageNote,
     "#SmallBusiness #CustomerCare",
-  ].filter(Boolean).join("\\n");
+  ].filter(Boolean).join("\n");
   const schedule = [
     { day: "Day 1", task: "Introduce your business and the problem you solve." },
     { day: "Day 2", task: "Share one useful tip related to your service." },
@@ -160,14 +160,14 @@ export function buildSocialChannelPosts(input: SocialCampaignInput) {
   const areaLine = area ? (lang === "Urdu" ? `علاقہ: ${area}` : `Area: ${area}`) : "";
   const offerLine = offer ? (lang === "Urdu" ? `خاص آفر: ${offer}` : `Offer: ${offer}`) : "";
   const cta = lang === "Urdu" ? `تفصیل کے لیے رابطہ کریں: ${contact}` : `Contact us: ${contact}`;
-  const base = [intro, detail, areaLine, offerLine, cta].filter(Boolean).join("\\n\\n");
+  const base = [intro, detail, areaLine, offerLine, cta].filter(Boolean).join("\n\n");
   return [
-    { id: "facebook", label: "Facebook", format: "Community post", text: `${base}\\n\\n#SmallBusiness #DigitalHelp #AIBuddy` },
-    { id: "instagram", label: "Instagram", format: "Caption + Reel idea", text: `✨ ${intro}\\n\\n${detail}\\n${offerLine}\\n${cta}\\n\\n#AIBuddy #DigitalServices #WorkSmart #SmallBusiness\\n\\nReel idea: show a common task, then show how AI Buddy helps prepare it.` },
+    { id: "facebook", label: "Facebook", format: "Community post", text: `${base}\n\n#SmallBusiness #DigitalHelp #AIBuddy` },
+    { id: "instagram", label: "Instagram", format: "Caption + Reel idea", text: `✨ ${intro}\n\n${detail}\n${offerLine}\n${cta}\n\n#AIBuddy #DigitalServices #WorkSmart #SmallBusiness\n\nReel idea: show a common task, then show how AI Buddy helps prepare it.` },
     { id: "x", label: "X (Twitter)", format: "Short post", text: `${name}: ${services}. ${offerLine} ${contact} #AIBuddy`.trim() },
-    { id: "tiktok", label: "TikTok", format: "Short-video script", text: `Hook: "Still doing this digital task the hard way?"\\nShow: ${services}.\\nExplain: AI Buddy helps prepare the work; review the result before using it.\\nCTA: ${contact}\\nCaption: ${intro}` },
-    { id: "youtube", label: "YouTube Shorts", format: "Title + description", text: `Title: How AI Buddy helps with ${services}\\n\\nDescription: ${base}\\n\\n#Shorts #AIBuddy` },
-    { id: "whatsapp", label: "WhatsApp Status", format: "3-slide status", text: `Slide 1: ${intro}\\nSlide 2: ${detail}\\nSlide 3: ${offerLine || cta}\\nReply/message: ${contact}` },
+    { id: "tiktok", label: "TikTok", format: "Short-video script", text: `Hook: "Still doing this digital task the hard way?"\nShow: ${services}.\nExplain: AI Buddy helps prepare the work; review the result before using it.\nCTA: ${contact}\nCaption: ${intro}` },
+    { id: "youtube", label: "YouTube Shorts", format: "Title + description", text: `Title: How AI Buddy helps with ${services}\n\nDescription: ${base}\n\n#Shorts #AIBuddy` },
+    { id: "whatsapp", label: "WhatsApp Status", format: "3-slide status", text: `Slide 1: ${intro}\nSlide 2: ${detail}\nSlide 3: ${offerLine || cta}\nReply/message: ${contact}` },
   ];
 }
 
@@ -214,10 +214,10 @@ export function buildViralCampaign(input: ViralCampaignInput) {
     `7–18 sec — STORY: ${details}`,
     music ? `18–25 sec — INVITE: ask viewers which lyric or moment they remember.` : `18–25 sec — PROOF: show a real example or explain one useful detail.`,
     `Final — CTA: ${cta}`,
-  ].join("\\n");
+  ].join("\n");
   const caption = music
-    ? `${name} 🎧\\nA small preview for ${audience}. Listen, tell us your favourite moment, and share it with someone who may connect with it.\\n${cta}`
-    : `${name} ✨\\nMade for ${audience}. ${details}\\n${cta}`;
+    ? `${name} 🎧\nA small preview for ${audience}. Listen, tell us your favourite moment, and share it with someone who may connect with it.\n${cta}`
+    : `${name} ✨\nMade for ${audience}. ${details}\n${cta}`;
   const experiments = [
     "Version A: emotional / problem-first opening",
     "Version B: question / curiosity opening",
