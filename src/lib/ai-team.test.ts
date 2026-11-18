@@ -26,6 +26,6 @@ describe("AI team", () => {
     const brief = getAgentBrief("music");
     expect(brief).toContain("Music Promotion Agent");
     expect(brief).toContain("Ask the owner before publishing");
-    expect(brief).toContain("Never promise virality");
+    expect(brief).toContain("Do not promise virality");
   });
 });
