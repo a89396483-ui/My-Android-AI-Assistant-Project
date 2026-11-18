@@ -5,14 +5,13 @@ import { VoiceRecorder } from "@/components/VoiceRecorder";
 const trackStop = vi.fn();
 const stream = { getTracks: () => [{ stop: trackStop }] };
 const getUserMedia = vi.fn();
-let recorder: FakeRecorder | undefined;
-
 class FakeRecorder {
+  static latest: FakeRecorder | undefined;
   state = "inactive";
   mimeType = "audio/webm";
   onstop: (() => void) | null = null;
   ondataavailable: ((e: { data: Blob }) => void) | null = null;
-  constructor() { recorder = this; }
+  constructor() { FakeRecorder.latest = this; }
   start() { this.state = "recording"; }
   stop = vi.fn(() => {
     this.state = "inactive";
@@ -22,7 +21,7 @@ class FakeRecorder {
 }
 
 beforeEach(() => {
-  recorder = undefined;
+  FakeRecorder.latest = undefined;
   trackStop.mockClear();
   getUserMedia.mockReset().mockResolvedValue(stream);
   vi.stubGlobal("MediaRecorder", FakeRecorder);
@@ -38,9 +37,9 @@ describe("Recording privacy and cleanup", () => {
     fireEvent.click(screen.getByRole("button", { name: "Start recording" }));
     await screen.findByRole("button", { name: "Stop recording" });
     view.unmount();
-    expect(recorder?.stop).toHaveBeenCalledTimes(1);
+    expect(FakeRecorder.latest?.stop).toHaveBeenCalledTimes(1);
     expect(trackStop).toHaveBeenCalledTimes(1);
-    expect(recorder?.onstop).toBeNull();
+    expect(FakeRecorder.latest?.onstop).toBeNull();
   });
 
   it("releases a microphone permission result that arrives after leaving", async () => {
@@ -51,7 +50,7 @@ describe("Recording privacy and cleanup", () => {
     view.unmount();
     await act(async () => { grant?.(stream); });
     expect(trackStop).toHaveBeenCalledTimes(1);
-    expect(recorder).toBeUndefined();
+    expect(FakeRecorder.latest).toBeUndefined();
   });
 
   it("stops the microphone on browser page exit", async () => {
@@ -59,7 +58,7 @@ describe("Recording privacy and cleanup", () => {
     fireEvent.click(screen.getByRole("button", { name: "Start recording" }));
     await screen.findByRole("button", { name: "Stop recording" });
     fireEvent(window, new Event("pagehide"));
-    expect(recorder?.stop).toHaveBeenCalledTimes(1);
+    expect(FakeRecorder.latest?.stop).toHaveBeenCalledTimes(1);
     expect(trackStop).toHaveBeenCalledTimes(1);
   });
 
