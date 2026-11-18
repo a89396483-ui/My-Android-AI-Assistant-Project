@@ -8,7 +8,10 @@ export const Route = createFileRoute("/api/song")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const ip = request.headers.get("cf-connecting-ip") || "anon";
+        const ip =
+          request.headers.get("cf-connecting-ip") ||
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+          "anon";
         const now = Date.now();
         for (const [visitor, times] of hits) if (!times.some((t) => now - t < 60_000)) hits.delete(visitor);
         const recent = (hits.get(ip) ?? []).filter((t) => now - t < 60_000);
