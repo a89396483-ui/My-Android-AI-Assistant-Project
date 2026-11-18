@@ -43,3 +43,11 @@ This status records verified repository work only. It is not a release certifica
 - Keep private keys server-side and out of Git.
 - Never claim a post, message, payment, APK, or deployment succeeded without a verifiable result.
 - Do not merge, deploy production, publish, or sign a release without explicit owner approval.
+
+## Follow-up source review — 2026-11-19
+- Confirmed `src/routes/api/chat.ts` and `src/routes/api/song.ts` call the Lovable AI Gateway at `https://ai.gateway.lovable.dev/v1/chat/completions`, selecting `google/gemini-3.8-flash`.
+- The required `LOVABLE_API_KEY` is a Lovable gateway/project key, not a direct Google Gemini API key. The source export does not prove whether the live hosting secret is configured or whether live calls succeed.
+- Corrected the `.env.example` and README wording so the two kinds of keys are not confused.
+- Corrected song endpoint IP detection to use the forwarded client IP when the Cloudflare header is absent.
+- Fixed the `no-this-alias` lint issue in the voice-recorder test without changing the component behavior.
+- Latest inspected CI run before these follow-up commits: unit tests passed; lint failed with 704 errors (703 Prettier formatting findings and one `no-this-alias` finding); production build was skipped. The `no-this-alias` finding is now fixed in source, but a new CI result has not yet been verified. The repository-wide Prettier backlog remains.
