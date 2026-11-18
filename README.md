@@ -11,7 +11,7 @@ AI Buddy is the existing TanStack Start / React application. This repository pre
 - `/api/song` — lyrics-generation endpoint.
 
 ## Development
-Requirements: Node.js 22 or a compatible Bun installation.
+Requirements: Node.js 24 or a compatible Bun installation. The repository does not currently commit an npm lockfile, so npm installs may resolve newer compatible dependency versions.
 
 ```sh
 npm install
@@ -26,7 +26,7 @@ The repository currently has no committed npm lockfile. CI installs from `packag
 ## AI configuration
 The existing server-side chat and lyrics endpoints require `LOVABLE_API_KEY`. Copy `.env.example` to a local `.env` and configure the key only in an authorized development/hosting environment. Never commit secrets or place private keys in browser code. No key is included in this repository.
 
-The app currently uses the Lovable AI Gateway with a Gemini model. Test live AI calls only after confirming authorized access and any usage charges/free limits.
+The app currently sends chat and lyrics requests through the Lovable AI Gateway using `google/gemini-3.8-flash`. The server requires `LOVABLE_API_KEY`, which is a Lovable project gateway key—not a direct Google Gemini API key. The source export does not contain that secret, and this repository check cannot confirm whether the live hosting environment has it configured. Test live AI calls only after confirming authorized access and any usage charges/free limits.
 
 ## Important feature limits
 - Chat and memories are stored in browser local storage on that device; cross-device cloud sync is not implemented.
