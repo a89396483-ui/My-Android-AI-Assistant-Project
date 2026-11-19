@@ -22,15 +22,15 @@ const StudioRoute = StudioRouteImport.update({ id: '/studio', path: '/studio', g
 const ApiChatRoute = ApiChatRouteImport.update({ id: '/api/chat', path: '/api/chat', getParentRoute: () => rootRouteImport } as any)
 const ApiSongRoute = ApiSongRouteImport.update({ id: '/api/song', path: '/api/song', getParentRoute: () => rootRouteImport } as any)
 
-export interface FileRoutesByFullPath { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/studio': typeof StudioRoute; '/studio': typeof StudioRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
-export interface FileRoutesByTo { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
-export interface FileRoutesById { __root__: typeof rootRouteImport; '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
+export interface FileRoutesByFullPath { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
+export interface FileRoutesByTo { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
+export interface FileRoutesById { __root__: typeof rootRouteImport; '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/api/chat' | '/api/song'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/song' | '/business-manager' | '/manager-ai' | '/api/chat' | '/api/song'
-  id: '__root__' | '/' | '/song' | '/business-manager' | '/manager-ai' | '/api/chat' | '/api/song'
+  to: '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/api/chat' | '/api/song'
+  id: '__root__' | '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/api/chat' | '/api/song'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren { IndexRoute: typeof IndexRoute; SongRoute: typeof SongRoute; BusinessManagerRoute: typeof BusinessManagerRoute; ManagerAIRoute: typeof ManagerAIRoute; StudioRoute: typeof StudioRoute; ApiChatRoute: typeof ApiChatRoute; ApiSongRoute: typeof ApiSongRoute }
