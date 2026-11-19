@@ -10,6 +10,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SongRouteImport } from './routes/song'
 import { Route as BusinessManagerRouteImport } from './routes/business-manager'
 import { Route as ManagerAIRouteImport } from './routes/manager-ai'
+import { Route as StudioRouteImport } from './routes/studio'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiSongRouteImport } from './routes/api/song'
 
@@ -17,21 +18,22 @@ const IndexRoute = IndexRouteImport.update({ id: '/', path: '/', getParentRoute:
 const SongRoute = SongRouteImport.update({ id: '/song', path: '/song', getParentRoute: () => rootRouteImport } as any)
 const BusinessManagerRoute = BusinessManagerRouteImport.update({ id: '/business-manager', path: '/business-manager', getParentRoute: () => rootRouteImport } as any)
 const ManagerAIRoute = ManagerAIRouteImport.update({ id: '/manager-ai', path: '/manager-ai', getParentRoute: () => rootRouteImport } as any)
+const StudioRoute = StudioRouteImport.update({ id: '/studio', path: '/studio', getParentRoute: () => rootRouteImport } as any)
 const ApiChatRoute = ApiChatRouteImport.update({ id: '/api/chat', path: '/api/chat', getParentRoute: () => rootRouteImport } as any)
 const ApiSongRoute = ApiSongRouteImport.update({ id: '/api/song', path: '/api/song', getParentRoute: () => rootRouteImport } as any)
 
-export interface FileRoutesByFullPath { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
+export interface FileRoutesByFullPath { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/studio': typeof StudioRoute; '/studio': typeof StudioRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
 export interface FileRoutesByTo { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
 export interface FileRoutesById { __root__: typeof rootRouteImport; '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/song' | '/business-manager' | '/manager-ai' | '/api/chat' | '/api/song'
+  fullPaths: '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/api/chat' | '/api/song'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/song' | '/business-manager' | '/manager-ai' | '/api/chat' | '/api/song'
   id: '__root__' | '/' | '/song' | '/business-manager' | '/manager-ai' | '/api/chat' | '/api/song'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren { IndexRoute: typeof IndexRoute; SongRoute: typeof SongRoute; BusinessManagerRoute: typeof BusinessManagerRoute; ManagerAIRoute: typeof ManagerAIRoute; ApiChatRoute: typeof ApiChatRoute; ApiSongRoute: typeof ApiSongRoute }
+export interface RootRouteChildren { IndexRoute: typeof IndexRoute; SongRoute: typeof SongRoute; BusinessManagerRoute: typeof BusinessManagerRoute; ManagerAIRoute: typeof ManagerAIRoute; StudioRoute: typeof StudioRoute; ApiChatRoute: typeof ApiChatRoute; ApiSongRoute: typeof ApiSongRoute }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
@@ -39,11 +41,12 @@ declare module '@tanstack/react-router' {
     '/song': { id: '/song'; path: '/song'; fullPath: '/song'; preLoaderRoute: typeof SongRouteImport; parentRoute: typeof rootRouteImport }
     '/business-manager': { id: '/business-manager'; path: '/business-manager'; fullPath: '/business-manager'; preLoaderRoute: typeof BusinessManagerRouteImport; parentRoute: typeof rootRouteImport }
     '/manager-ai': { id: '/manager-ai'; path: '/manager-ai'; fullPath: '/manager-ai'; preLoaderRoute: typeof ManagerAIRouteImport; parentRoute: typeof rootRouteImport }
+    '/studio': { id: '/studio'; path: '/studio'; fullPath: '/studio'; preLoaderRoute: typeof StudioRouteImport; parentRoute: typeof rootRouteImport }
     '/api/chat': { id: '/api/chat'; path: '/api/chat'; fullPath: '/api/chat'; preLoaderRoute: typeof ApiChatRouteImport; parentRoute: typeof rootRouteImport }
     '/api/song': { id: '/api/song'; path: '/api/song'; fullPath: '/api/song'; preLoaderRoute: typeof ApiSongRouteImport; parentRoute: typeof rootRouteImport }
   }
 }
-const rootRouteChildren: RootRouteChildren = { IndexRoute, SongRoute, BusinessManagerRoute, ManagerAIRoute, ApiChatRoute, ApiSongRoute }
+const rootRouteChildren: RootRouteChildren = { IndexRoute, SongRoute, BusinessManagerRoute, ManagerAIRoute, StudioRoute, ApiChatRoute, ApiSongRoute }
 export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'
