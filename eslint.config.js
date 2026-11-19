@@ -37,4 +37,6 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  // Formatting is handled separately by `npm run format`.
+  { rules: { "prettier/prettier": "off" } },
 );
