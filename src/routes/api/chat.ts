@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { chatInput } from "@/lib/ai-input";
+import { getFreeAssistantReply, getFreeProviderUnavailableReply } from "@/lib/free-assistant";
 
 const MODEL = "google/gemini-3.8-flash";
 const LIMIT = 20; // requests per minute per visitor
@@ -71,6 +72,23 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const key = process.env["LOVABLE_API_KEY"];
+        const latestUserMessage = [...msgs].reverse().find((message) => message.role === "user");
+        const hasImage = msgs.some((message) => Boolean(message.image));
+        const freeReply = latestUserMessage && !hasImage && body.mode !== "game"
+          ? getFreeAssistantReply(latestUserMessage.text, body.lang ?? "auto")
+          : null;
+        const localReply = freeReply ?? (!key && latestUserMessage && !hasImage && body.mode !== "game"
+          ? getFreeProviderUnavailableReply(body.lang ?? "auto")
+          : null);
+
+        // Basic app FAQs and a fixed promotional template are answered locally,
+        // without calling or paying an external AI provider.
+        if (localReply) {
+          const payload = `data: ${JSON.stringify({ choices: [{ delta: { content: localReply } }] })}\n\ndata: [DONE]\n\n`;
+          return new Response(payload, {
+            headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache, no-transform" },
+          });
+        }
         if (!key) return Response.json({ error: "AI is not configured." }, { status: 500 });
 
         // Only the latest image is sent; older images are dropped to save usage.
