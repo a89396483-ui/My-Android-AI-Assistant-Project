@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { songInput } from "@/lib/ai-input";
 
-const MODEL = "google/gemini-3.8-flash";
 const hits = new Map<string, number[]>();
 
 export const Route = createFileRoute("/api/song")({
@@ -30,36 +29,70 @@ export const Route = createFileRoute("/api/song")({
         const lang = ["Urdu", "Hindi", "Punjabi", "English"].includes(b.lang ?? "") ? b.lang : "Urdu";
         const style = String(b.style ?? "romantic").slice(0, 30);
         const voice = b.voice === "male" ? "male" : "female";
+        const systemPrompt = "You are a gifted songwriter. Write fully original song lyrics (never copy existing songs). Output only: a title line, then labelled sections [Verse 1], [Chorus], [Verse 2], [Chorus], [Bridge], [Chorus]. No markdown symbols.";
+        const userPrompt = `Language: ${lang} (use its native script; for Punjabi use Shahmukhi or Gurmukhi as fits). Style: ${style}. Singer: ${voice} voice. Song idea: ${idea}`;
 
-        const key = process.env["LOVABLE_API_KEY"];
-        if (!key) return Response.json({ error: "AI is not configured." }, { status: 500 });
+        const geminiKey = process.env["GEMINI_API_KEY"];
+        const lovableKey = process.env["LOVABLE_API_KEY"];
+        if (!geminiKey && !lovableKey) return Response.json({ error: "AI is not configured." }, { status: 503 });
 
-        let r: Response;
-        try {
-          r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
-            body: JSON.stringify({
-              model: MODEL,
-              messages: [
-                { role: "system", content: "You are a gifted songwriter. Write fully original song lyrics (never copy existing songs). Output only: a title line, then labelled sections [Verse 1], [Chorus], [Verse 2], [Chorus], [Bridge], [Chorus]. No markdown symbols." },
-                { role: "user", content: `Language: ${lang} (use its native script; for Punjabi use Shahmukhi or Gurmukhi as fits). Style: ${style}. Singer: ${voice} voice. Song idea: ${idea}` },
-              ],
-            }),
-            signal: AbortSignal.any([request.signal, AbortSignal.timeout(45_000)]),
-          });
-        } catch {
-          if (request.signal.aborted) return new Response(null, { status: 499 });
-          return Response.json({ error: "AI-Buddy could not connect to the AI service. Please try again." }, { status: 502 });
+        let lyrics = "";
+        if (geminiKey) {
+          const model = process.env["GEMINI_MODEL"] || "gemini-3.8-flash";
+          let response: Response;
+          try {
+            response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
+              body: JSON.stringify({
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+                generationConfig: { temperature: 0.85, maxOutputTokens: 2048 },
+              }),
+              signal: AbortSignal.any([request.signal, AbortSignal.timeout(45_000)]),
+            });
+          } catch {
+            if (request.signal.aborted) return new Response(null, { status: 499 });
+            return Response.json({ error: "AI-Buddy could not connect to Gemini. Please try again." }, { status: 502 });
+          }
+          if (!response.ok) {
+            const status = response.status === 429 ? 429 : response.status === 403 ? 403 : 502;
+            return Response.json({
+              error: status === 429
+                ? "Gemini is busy or its usage limit has been reached. No other provider will be charged automatically."
+                : status === 403
+                  ? "Gemini access is not enabled for this key or project."
+                  : "Gemini could not create the lyrics. Please check the server-side key and model settings.",
+            }, { status });
+          }
+          const result = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+          lyrics = result.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim() ?? "";
+        } else {
+          let response: Response;
+          try {
+            response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
+              body: JSON.stringify({
+                model: "google/gemini-3.8-flash",
+                messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+              }),
+              signal: AbortSignal.any([request.signal, AbortSignal.timeout(45_000)]),
+            });
+          } catch {
+            if (request.signal.aborted) return new Response(null, { status: 499 });
+            return Response.json({ error: "AI-Buddy could not connect to the AI service. Please try again." }, { status: 502 });
+          }
+          if (!response.ok) {
+            const map: Record<number, string> = { 429: "AI-Buddy is busy. Try again in a minute.", 402: "The configured AI usage is finished for now.", 403: "AI access is blocked right now." };
+            return Response.json({ error: map[response.status] ?? "Could not create the song. Please try again." }, { status: response.status });
+          }
+          const result = await response.json() as { choices?: { message?: { content?: string } }[] };
+          lyrics = result.choices?.[0]?.message?.content?.trim() ?? "";
         }
-        if (!r.ok) {
-          const map: Record<number, string> = { 429: "AI-Buddy is busy. Try again in a minute.", 402: "The free AI usage is finished for now.", 403: "AI access is blocked right now." };
-          return Response.json({ error: map[r.status] ?? "Could not create the song. Please try again." }, { status: r.status });
-        }
-        const j = (await r.json()) as { choices?: { message?: { content?: string } }[] };
-        const lyrics = j.choices?.[0]?.message?.content?.trim();
-        if (!lyrics) return Response.json({ error: "Could not create the song. Please try again." }, { status: 502 });
-        return Response.json({ lyrics });
+
+        if (!lyrics) return Response.json({ error: "Could not create the lyrics. Please try again." }, { status: 502 });
+        return Response.json({ lyrics, outputType: "lyrics-only" });
       },
     },
   },
