@@ -160,7 +160,8 @@ function Home() {
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
           <div className="orb lotus grid size-11 shrink-0 place-items-center rounded-full"><Sparkles className="size-6 text-primary-foreground" /></div>
           <div className="min-w-0 flex-1"><h1 className="font-bold tracking-tight">AI-Buddy</h1><p className="text-xs text-muted-foreground">Your friendly AI companion</p></div>
-          <Link to="/studio" className="rounded-xl bg-secondary p-2.5" aria-label="Marketing and music studio"><Sparkles className="size-5" /></Link>\n          <a href="/software-builder" className="rounded-xl bg-secondary p-2.5" aria-label="Mini software builder"><Code2 className="size-5" /></a>
+          <Link to="/studio" className="rounded-xl bg-secondary p-2.5" aria-label="Marketing and music studio"><Sparkles className="size-5" /></Link>
+          <Link to="/software-builder" className="rounded-xl bg-secondary p-2.5" aria-label="Mini software builder"><Code2 className="size-5" /></Link>
           <Link to="/song" className="rounded-xl bg-secondary p-2.5" aria-label="Song creator"><Music className="size-5" /></Link>
           <button onClick={clearChat} className="rounded-xl bg-secondary p-2.5" aria-label="Clear chat and memories"><Trash2 className="size-5" /></button>
         </div>
