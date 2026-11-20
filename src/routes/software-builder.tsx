@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { ArrowLeft, Bot, Code2, Copy, Download, LoaderCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Bot, Code2, Copy, LoaderCircle, Sparkles } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 export const Route = createFileRoute("/software-builder")({
