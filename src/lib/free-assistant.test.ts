@@ -19,7 +19,7 @@ describe("free assistant", () => {
 
   it("returns null for open-ended requests that need a real model", () => {
     expect(getFreeAssistantReply("Write a detailed business plan for my shop", "en")).toBeNull();
-    expect(getFreeProviderUnavailableReply("hi")).toContain("real AI model");
+    expect(getFreeProviderUnavailableReply("hi")).toContain("असली AI मॉडल");
   });
 
   it("supports Hindi and Roman Urdu responses", () => {
