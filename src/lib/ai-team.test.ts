@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { AI_TEAM, OWNER_AND_REVIEWERS, getAgentBrief, routeToAgent } from "./ai-team";
 
 describe("AI team", () => {
-  it("registers nine specialist agents, including the music agent", () => {
-    expect(AI_TEAM).toHaveLength(9);
+  it("registers twelve specialist agents, including the music agent", () => {
+    expect(AI_TEAM).toHaveLength(12);
     expect(AI_TEAM.map((agent) => agent.id)).toContain("music");
   });
 
-  it("keeps the owner and ChatGPT separate from the nine agents", () => {
+  it("keeps the owner and ChatGPT separate from the twelve agents", () => {
     expect(OWNER_AND_REVIEWERS.map((person) => person.id)).toEqual(["owner", "reviewer"]);
   });
 
