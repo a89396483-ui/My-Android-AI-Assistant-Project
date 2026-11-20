@@ -43,7 +43,7 @@ function languageKey(language: FreeReplyLanguage) {
 export function getFreeAssistantReply(message: string, language: FreeReplyLanguage = "auto"): string | null {
   const value = message.toLocaleLowerCase();
   const copy = REPLIES[languageKey(language)];
-  if (/^(hi|hello|hey|salam|assalam|السلام|سلام|नमस्ते|ہیلو|ہائے)[!.،\s]*$/iu.test(value.trim())) return copy.welcome;
+  if (/^(hi|hello|hey|salam|assalam|السلام|سلام|नमस्ते|ہیلو|ہائے)/iu.test(value.trim())) return copy.welcome;
   if (/(what can (you|it) do|features|کیا کر سکتے|کیا سہولت|کون سے فیچر|क्या कर सकते|कौन सी सुविधा|features kya)/iu.test(value)) return copy.features;
   if (/(price|pricing|package|charges|cost|قیمت|پیکج|کتنے پیسے|कितना पैसा|कीमत|पैकेज)/iu.test(value)) return copy.pricing;
   if (/(share|invite|send.*link|link.*send|لوگوں تک|شیئر|لنک بھیج|लिंक भेज|शेयर)/iu.test(value)) return copy.share;
