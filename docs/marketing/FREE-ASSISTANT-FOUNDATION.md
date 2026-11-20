@@ -36,6 +36,6 @@ The chat route now supports a direct Google Gemini API key stored only as the se
 - The older `LOVABLE_API_KEY` connection remains supported only when `GEMINI_API_KEY` is absent.
 - No API key is included in the repository. The owner must add a key to the hosting provider's server-side secret settings.
 - Google AI Studio availability, free quota, pricing, regional eligibility and terms can change. Do not promise unlimited free usage; verify the current terms before enabling customer access.
-- The song route is separate: this Gemini chat connection does not generate sung audio and does not turn the lyrics-only song route into an audio generator.
+- The same server-side Gemini key can also be used by the separate song route to draft original lyrics. It does not generate sung audio or create an MP3; the song route remains lyrics-only.
 
 Official setup reference: https://ai.google.dev/gemini-api/docs/quickstart
