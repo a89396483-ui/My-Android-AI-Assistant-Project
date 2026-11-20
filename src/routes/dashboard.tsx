@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ArrowRight, Bot, BriefcaseBusiness, Code2, LayoutDashboard, Music, Sparkles, WandSparkles } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -56,7 +57,18 @@ const tools = [
   },
 ];
 
+type Readiness = { chatProvider: string; freeHelper: string; openEndedChatReady: boolean; songAudioGeneration: string; socialAutoPublishing: string; customerPayments: string };
+
 function Dashboard() {
+  const [readiness, setReadiness] = useState<Readiness | null>(null);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/status").then((response) => response.ok ? response.json() as Promise<Readiness> : null)
+      .then((value) => { if (active && value) setReadiness(value); })
+      .catch(() => { if (active) setReadiness(null); });
+    return () => { active = false; };
+  }, []);
+
   return (
     <main className="min-h-dvh bg-glow px-4 py-6 sm:py-10">
       <div className="mx-auto max-w-4xl">
@@ -76,6 +88,21 @@ function Dashboard() {
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
             Open all the current tools from this one dashboard. Some tools prepare drafts or plans; features that need an AI provider or an outside account will only work after that connection is configured and tested.
           </p>
+        </section>
+
+        <section className="mb-6 rounded-3xl border border-border bg-card/80 p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-semibold">Current setup</h2>
+            <span className="text-xs text-muted-foreground">{readiness ? "Server status checked" : "Checking setup…"}</span>
+          </div>
+          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            <p>Free helper: <strong>{readiness?.freeHelper === "available" ? "Ready" : "Checking"}</strong></p>
+            <p>Full AI chat: <strong>{readiness?.openEndedChatReady ? (readiness.chatProvider === "gemini" ? "Gemini key set" : "Gateway key set") : "Needs provider key"}</strong></p>
+            <p>Sung audio: <strong>{readiness?.songAudioGeneration === "not-connected" ? "Not connected" : "Not checked"}</strong></p>
+            <p>Automatic social posting: <strong>{readiness?.socialAutoPublishing === "not-connected" ? "Not connected" : "Not checked"}</strong></p>
+            <p>Customer payments: <strong>{readiness?.customerPayments === "not-configured" ? "Not configured" : "Not checked"}</strong></p>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">This checks whether server settings exist. It does not prove that an AI key works or that a payment or social account is connected.</p>
         </section>
 
         <section className="grid gap-3 sm:grid-cols-2">
