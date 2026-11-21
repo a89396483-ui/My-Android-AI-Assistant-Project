@@ -12,6 +12,37 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
+const mainServices = [
+  {
+    title: "AI Buddy Conversation",
+    description: "A friendly multilingual assistant for natural, respectful conversations in Urdu, Hindi, Punjabi and English.",
+    to: "/" as const,
+    icon: Bot,
+    status: "Conversation assistant",
+  },
+  {
+    title: "Customer Finder AI",
+    description: "Organise potential customers, prepare personalised outreach messages and track follow-ups. Sending remains under your approval.",
+    to: "/business-manager" as const,
+    icon: Users,
+    status: "Find and follow up",
+  },
+  {
+    title: "Music Marketing AI",
+    description: "Plan song launches, create captions and short-video campaign drafts, and prepare posts for connected social accounts.",
+    to: "/studio" as const,
+    icon: Music,
+    status: "Music promotion",
+  },
+  {
+    title: "Business Marketing AI",
+    description: "Create business promotions, platform-specific posts, offers and campaign ideas to reach more customers.",
+    to: "/studio" as const,
+    icon: BriefcaseBusiness,
+    status: "Business growth",
+  },
+];
+
 const tools = [
   {
     title: "AI Buddy Chat",
@@ -105,29 +136,63 @@ function Dashboard() {
           <p className="mt-3 text-xs leading-5 text-muted-foreground">This checks whether server settings exist. It does not prove that an AI key works or that a payment or social account is connected.</p>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2">
-          {tools.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <Link
-                key={tool.title}
-                to={tool.to}
-                className="group flex min-h-40 flex-col rounded-3xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="grid size-10 place-items-center rounded-2xl bg-secondary">
-                    <Icon className="size-5" />
+        <section className="mb-7">
+          <div className="mb-3">
+            <h2 className="text-lg font-bold">Four Main AI Services</h2>
+            <p className="mt-1 text-sm text-muted-foreground">The four core services of the AI Buddy business.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {mainServices.map((service) => {
+              const Icon = service.icon;
+              return (
+                <Link
+                  key={service.title}
+                  to={service.to}
+                  className="group flex min-h-44 flex-col rounded-3xl border border-primary/20 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="grid size-10 place-items-center rounded-2xl bg-secondary">
+                      <Icon className="size-5" />
+                    </span>
+                    <span className="text-xs text-muted-foreground">{service.status}</span>
+                  </div>
+                  <h3 className="font-semibold">{service.title}</h3>
+                  <p className="mt-1 flex-1 text-sm leading-6 text-muted-foreground">{service.description}</p>
+                  <span className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    Open service <ArrowRight className="size-4 transition group-hover:translate-x-1" />
                   </span>
-                  <span className="text-xs text-muted-foreground">{tool.status}</span>
-                </div>
-                <h3 className="font-semibold">{tool.title}</h3>
-                <p className="mt-1 flex-1 text-sm leading-6 text-muted-foreground">{tool.description}</p>
-                <span className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                  Open tool <ArrowRight className="size-4 transition group-hover:translate-x-1" />
-                </span>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-lg font-bold">Other AI Buddy Tools</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {tools.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <Link
+                  key={tool.title}
+                  to={tool.to}
+                  className="group flex min-h-40 flex-col rounded-3xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="grid size-10 place-items-center rounded-2xl bg-secondary">
+                      <Icon className="size-5" />
+                    </span>
+                    <span className="text-xs text-muted-foreground">{tool.status}</span>
+                  </div>
+                  <h3 className="font-semibold">{tool.title}</h3>
+                  <p className="mt-1 flex-1 text-sm leading-6 text-muted-foreground">{tool.description}</p>
+                  <span className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    Open tool <ArrowRight className="size-4 transition group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </section>
 
         <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">
