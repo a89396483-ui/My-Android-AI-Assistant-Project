@@ -102,6 +102,46 @@ function Studio() {
     toast.success("Storyboard and video prompt are ready.");
   }
 
+  async function generateWithAI(prompt: string) {
+    setOutput("AI is preparing your draft…");
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang: language === "Urdu" ? "ur" : language === "Hindi" ? "hi" : language === "Punjabi" ? "pa" : "roman-ur", mode: "manager", messages: [{ role: "user", text: prompt }] }),
+      });
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({})) as { error?: string };
+        throw new Error(payload.error || "AI service is not configured yet.");
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let answer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const event = JSON.parse(raw) as { choices?: Array<{ delta?: { content?: string } }> };
+            answer += event.choices?.[0]?.delta?.content ?? "";
+          } catch { /* Ignore incomplete stream frames. */ }
+        }
+      }
+      setOutput(answer.trim() || "AI returned an empty draft. Please try again.");
+      toast.success("AI marketing draft is ready.");
+    } catch (error) {
+      setOutput(error instanceof Error ? error.message : "AI connection failed.");
+      toast.error("Could not generate with AI.");
+    }
+  }
+
   async function copyOutput() {
     if (!output) return;
     try { await navigator.clipboard.writeText(output); toast.success("Copied."); }
@@ -149,6 +189,7 @@ function Studio() {
             <label className="space-y-1 text-sm">Language<select className={field} value={language} onChange={(e) => setLanguage(e.target.value)}><option>Roman Urdu</option><option>Urdu</option><option>Hindi</option><option>English</option><option>Punjabi</option></select></label>
           </div>
           <button onClick={makeGrowth} className={button + " w-full bg-violet-600 text-white"}>Create platform-wise marketing drafts</button>
+          <button onClick={() => void generateWithAI(`Create a complete business marketing package for ${business}. Services: ${service}. Target area: ${area}. Public contact: ${contact || "not provided"}. Offer: ${offer}. Language: ${language}. Include Facebook and Instagram posts, WhatsApp status, 3 ad versions, 5 short-video hooks, a 7-day content calendar, a simple customer offer and measurable next steps. Never invent reviews or guarantee sales.`)} className={button + " w-full border border-cyan-300/30 bg-cyan-400/10 text-cyan-100"}>Ask AI to create a detailed marketing package</button>
         </section>}
 
         {tab === "music" && <section className={panel + " space-y-4"}>
@@ -161,6 +202,7 @@ function Studio() {
           </div>
           <label className="flex items-start gap-3 rounded-xl border border-white/10 p-3 text-sm"><input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} className="mt-1 size-4" /><span>I own or have permission to use the recording, composition, vocals, lyrics, artwork and samples.</span></label>
           <button onClick={makeMusic} className={button + " w-full bg-violet-600 text-white"}>Create music promotion campaign</button>
+          <button onClick={() => void generateWithAI(`Create a complete, practical music marketing package. Song: ${musicName || "Not provided"}. Artist: ${artist || "Not provided"}. Audience: ${musicAudience}. Song mood/story: ${musicDetails}. Language: ${language}. Include 5 original hooks, 3 short video scripts, platform captions, a 7-day posting calendar, low-budget Pakistan-friendly promotion ideas, and clear next steps. Do not promise guaranteed views. Mention that publishing is manual.`)} className={button + " w-full border border-cyan-300/30 bg-cyan-400/10 text-cyan-100"}>Ask AI to create a detailed music campaign</button>
         </section>}
 
         {tab === "video" && <section className={panel + " space-y-4"}>
@@ -171,6 +213,7 @@ function Studio() {
             <label className="space-y-1 text-sm">Duration<select className={field} value={duration} onChange={(e) => setDuration(Number(e.target.value))}><option value={15}>15 seconds</option><option value={25}>25 seconds</option><option value={30}>30 seconds</option><option value={45}>45 seconds</option><option value={60}>60 seconds</option></select></label>
           </div>
           <button onClick={makeVideoPlan} className={button + " w-full bg-violet-600 text-white"}>Create storyboard and video prompt</button>
+          <button onClick={() => void generateWithAI(`Create a detailed ${duration}-second ${format} music-video storyboard. Song idea: ${videoPrompt || musicDetails}. Language: ${language}. Give timed scenes, camera direction, visual mood, on-screen text, and a ready-to-copy video-generation prompt. Use fictional performers only and do not imitate a real artist.`)} className={button + " w-full border border-cyan-300/30 bg-cyan-400/10 text-cyan-100"}>Ask AI to expand this video plan</button>
           <p className="flex items-center gap-2 text-xs text-amber-300"><Clapperboard className="size-4 shrink-0" /> Finished video generation is not connected yet. This tool currently prepares the storyboard and prompt.</p>
         </section>}
 
