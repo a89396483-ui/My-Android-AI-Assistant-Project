@@ -69,6 +69,8 @@ function BusinessManager() {
   const [metricValues, setMetricValues] = useState({ views: "0", averageWatchSeconds: "0", shares: "0", saves: "0", comments: "0", inquiries: "0" });
   const metricReview = reviewCampaignMetrics(Object.fromEntries(Object.entries(metricValues).map(([key,value])=>[key,Math.max(0,Number(value)||0)])) as Parameters<typeof reviewCampaignMetrics>[0]);
 
+  const [prospectAiPlan, setProspectAiPlan] = useState("");
+  const [prospectAiBusy, setProspectAiBusy] = useState(false);
   const [prospectArea, setProspectArea] = useState("Karachi");
   const prospectingPlan = getCustomerProspectingPlan(prospectArea);
   const [saved, setSaved] = useState(false);
@@ -143,6 +145,47 @@ function BusinessManager() {
     setAccounts(next);
     try { localStorage.setItem("ai-buddy-business-accounts", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
     setAccountAmount(""); setAccountNote("");
+  }
+
+  async function createProspectPlan() {
+    setProspectAiBusy(true);
+    setProspectAiPlan("");
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang: "auto", mode: "manager", messages: [{ role: "user", text: `Create a practical customer-finding plan for AI Buddy services in ${prospectArea}. Focus on small shops, local service providers, independent singers/musicians and small businesses that may need multilingual customer replies, social media content or music promotion. Give 5 relevant customer segments, exact public search phrases, how to qualify a genuine prospect, a polite first-contact message in simple Roman Urdu and English, and a simple lead tracking checklist. Do not claim to search the live internet or provide invented names, phone numbers or leads. No spam; use public business contacts and respectful outreach only.` }] }),
+      });
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({})) as { error?: string };
+        throw new Error(payload.error || "AI service is not configured yet.");
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let answer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const event = JSON.parse(raw) as { choices?: Array<{ delta?: { content?: string } }> };
+            answer += event.choices?.[0]?.delta?.content ?? "";
+          } catch { /* Ignore incomplete stream frames. */ }
+        }
+      }
+      setProspectAiPlan(answer.trim() || "AI returned an empty plan. Please try again.");
+    } catch (error) {
+      setProspectAiPlan(error instanceof Error ? error.message : "AI connection failed.");
+    } finally {
+      setProspectAiBusy(false);
+    }
   }
 
   function addLead(event: FormEvent<HTMLFormElement>) {
@@ -298,6 +341,8 @@ function BusinessManager() {
               {active === "leads" && <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-slate-400">ہم ایسے لوگوں کو تلاش کرنے کی حکمت عملی بنائیں گے جنہیں واقعی AI Buddy کی خدمات چاہییں۔ پہلے ان کے کاروبار یا ضرورت کے مطابق عوامی گروپس، بزنس ڈائریکٹریز اور پبلک پیجز میں تحقیق کریں؛ پھر متعلقہ رابطے کو ایک اجازت والا تعارفی پیغام بھیجیں۔ کوئی نجی ڈیٹا اسکریپنگ یا اسپیم نہیں۔</p>
                 <label className="block space-y-1 text-xs text-slate-300">Target city / area<input value={prospectArea} onChange={e=>setProspectArea(e.target.value)} placeholder="Karachi" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /></label>
+                <button onClick={() => void createProspectPlan()} disabled={prospectAiBusy} className="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 px-4 py-3 text-sm font-bold disabled:opacity-50">{prospectAiBusy ? "AI is preparing your customer plan…" : "Create a detailed customer-finding plan with AI"}</button>
+                {prospectAiPlan && <div className="whitespace-pre-wrap rounded-2xl border border-cyan-300/20 bg-black/20 p-4 text-xs leading-relaxed text-slate-200">{prospectAiPlan}<button onClick={() => navigator.clipboard?.writeText(prospectAiPlan)} className="mt-3 block rounded-lg bg-white/10 px-3 py-2 font-semibold">Copy AI customer plan</button></div>}
                 <div className="space-y-3"><h3 className="text-sm font-semibold text-cyan-200">Customer groups for AI Buddy</h3>{prospectingPlan.map(segment=><div key={segment.id} className="rounded-2xl border border-white/10 bg-black/20 p-4"><h4 className="text-sm font-semibold">{segment.title}</h4><p className="mt-2 text-xs leading-relaxed text-slate-300">Who: {segment.who}</p><p className="mt-1 text-xs leading-relaxed text-slate-400">Need: {segment.need}</p><p className="mt-2 text-xs font-semibold text-cyan-200">Suggested public searches</p><ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-slate-300">{segment.searches.map(q=><li key={q}>{q}</li>)}</ul><p className="mt-2 text-xs font-semibold text-cyan-200">Offer: {segment.offer}</p><div className="mt-3 rounded-xl border border-white/5 p-3"><p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-300">{segment.outreach}</p><button onClick={()=>navigator.clipboard?.writeText(segment.outreach)} className="mt-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold">Copy intro message</button></div></div>)}</div>
                 <div className="border-t border-white/10 pt-4"><h3 className="mb-2 text-sm font-semibold">Add a potential customer you found</h3><form onSubmit={addLead} className="grid gap-2 sm:grid-cols-2"><input value={leadName} onChange={e=>setLeadName(e.target.value)} placeholder="Business / customer name" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /><input value={leadContact} onChange={e=>setLeadContact(e.target.value)} placeholder="Public contact (if appropriate)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /><input value={leadNeed} onChange={e=>setLeadNeed(e.target.value)} placeholder="Which AI Buddy service do they need?" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2" /><button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-sm font-bold sm:col-span-2">Save potential customer</button></form>{leads.map(lead=><div key={lead.id} className="mt-2 rounded-xl border border-white/10 p-3"><p className="text-sm font-semibold">{lead.name || "Customer"}</p><p className="mt-1 text-xs text-slate-400">{lead.contact} · {lead.need}</p></div>)}</div>
                 <p className="text-[10px] text-amber-200">یہ فی الحال prospecting guide ہے؛ ابھی یہ خود live internet پر سرچ یا خودکار رابطہ نہیں کرتا۔ اگلے مرحلے میں approved public-source research اور lead import workflow جوڑنا ہوگا۔</p>
