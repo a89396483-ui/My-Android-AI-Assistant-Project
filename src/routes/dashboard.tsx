@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Bot, BriefcaseBusiness, Code2, LayoutDashboard, Music, Sparkles, WandSparkles } from "lucide-react";
+import { ArrowRight, Bot, BriefcaseBusiness, Code2, LayoutDashboard, Music, Sparkles, Users, WandSparkles } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
