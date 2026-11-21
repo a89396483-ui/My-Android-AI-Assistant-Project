@@ -80,12 +80,17 @@ function BusinessManager() {
   const [handoffContact, setHandoffContact] = useState("");
   const [handoffQuestion, setHandoffQuestion] = useState("");
   const [handoffCopied, setHandoffCopied] = useState(false);
+  const [whatsAppNumber, setWhatsAppNumber] = useState("");
+  const [customerMessage, setCustomerMessage] = useState(makeCapabilityReply());
+  const [draftSaved, setDraftSaved] = useState(false);
   const accountSummary = summarizeAccounts(accounts);
   useEffect(() => {
     try {
       const storedProfile = localStorage.getItem("ai-buddy-business-profile");
       const storedLeads = localStorage.getItem("ai-buddy-business-leads");
       const storedAccounts = localStorage.getItem("ai-buddy-business-accounts");
+      const storedWhatsApp = localStorage.getItem("ai-buddy-business-whatsapp");
+      if (storedWhatsApp) setWhatsAppNumber(storedWhatsApp);
       if (storedProfile) setProfile((current) => ({ ...current, ...JSON.parse(storedProfile) }));
       if (storedLeads) setLeads(JSON.parse(storedLeads));
       if (storedAccounts) setAccounts(JSON.parse(storedAccounts));
@@ -118,7 +123,7 @@ function BusinessManager() {
 
   function clearBusinessData() {
     if (!window.confirm("Delete this device’s saved Business Manager profile, leads and accounts?")) return;
-    for (const key of ["ai-buddy-business-profile", "ai-buddy-business-leads", "ai-buddy-business-accounts"]) localStorage.removeItem(key);
+    for (const key of ["ai-buddy-business-profile", "ai-buddy-business-leads", "ai-buddy-business-accounts", "ai-buddy-business-whatsapp", "ai-buddy-business-campaign-drafts"]) localStorage.removeItem(key);
     setProfile({ name: "", service: "", area: "", publicContact: "", ownerContact: "", language: "Urdu" });
     setLeads([]); setAccounts([]); setSaved(false);
   }
@@ -275,7 +280,7 @@ function BusinessManager() {
                   </div>
                   {viralType==="music" && <label className="flex items-start gap-2 text-xs text-slate-300"><input type="checkbox" checked={viralRights} onChange={e=>setViralRights(e.target.checked)} className="mt-0.5"/> I own or have written permission for the recording, composition, vocals, artwork and samples used.</label>}
                   <button onClick={()=>setViralResult(buildViralCampaign({type:viralType,name:viralName,audience:viralAudience,platform:campaignPlatform,language:campaignLanguage,goal:campaignObjective,details:viralDetails,callToAction:viralCta,rightsConfirmed:viralRights}))} className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-4 py-3 text-sm font-bold">Create viral video plan</button>
-                  {viralResult && <div className="space-y-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                  {viralResult && <div className="space-y-3 rounded-xl border border-white/10 bg-black/20 p-3"><button onClick={()=>{try{const key="ai-buddy-business-campaign-drafts";const previous=JSON.parse(localStorage.getItem(key)||"[]");const entry={id:String(Date.now()),type:viralType,name:viralName,platform:campaignPlatform,createdAt:new Date().toISOString(),result:viralResult};localStorage.setItem(key,JSON.stringify([entry,...previous].slice(0,30)));setDraftSaved(true);}catch{setDraftSaved(false);}}} className="rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-200">Save this campaign on this device</button>{draftSaved && <p className="text-xs text-emerald-300">Campaign saved on this device.</p>}
                     <div><p className="text-xs font-semibold text-cyan-200">3 opening hooks to test</p>{viralResult.hooks.map((hook,index)=><p key={index} className="mt-2 text-xs text-slate-200">{index+1}. {hook}</p>)}</div>
                     <div><p className="text-xs font-semibold text-cyan-200">Short-video script</p><pre className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-200">{viralResult.script}</pre></div>
                     <div><p className="text-xs font-semibold text-cyan-200">Caption</p><pre className="mt-2 whitespace-pre-wrap font-sans text-xs text-slate-200">{viralResult.caption}</pre></div>
@@ -297,7 +302,7 @@ function BusinessManager() {
                 <div className="border-t border-white/10 pt-4"><h3 className="mb-2 text-sm font-semibold">Add a potential customer you found</h3><form onSubmit={addLead} className="grid gap-2 sm:grid-cols-2"><input value={leadName} onChange={e=>setLeadName(e.target.value)} placeholder="Business / customer name" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /><input value={leadContact} onChange={e=>setLeadContact(e.target.value)} placeholder="Public contact (if appropriate)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /><input value={leadNeed} onChange={e=>setLeadNeed(e.target.value)} placeholder="Which AI Buddy service do they need?" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2" /><button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-sm font-bold sm:col-span-2">Save potential customer</button></form>{leads.map(lead=><div key={lead.id} className="mt-2 rounded-xl border border-white/10 p-3"><p className="text-sm font-semibold">{lead.name || "Customer"}</p><p className="mt-1 text-xs text-slate-400">{lead.contact} · {lead.need}</p></div>)}</div>
                 <p className="text-[10px] text-amber-200">یہ فی الحال prospecting guide ہے؛ ابھی یہ خود live internet پر سرچ یا خودکار رابطہ نہیں کرتا۔ اگلے مرحلے میں approved public-source research اور lead import workflow جوڑنا ہوگا۔</p>
               </div>}
-              {active === "replies" && <div className="space-y-3"><p className="text-xs text-slate-400">ग्राहक को भेजने से पहले जवाब जाँचें। नीचे आपकी मौजूदा सेवाओं की सूची का नमूना जवाब है।</p><pre className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/20 p-4 font-sans text-sm leading-relaxed">{makeCapabilityReply()}</pre><button onClick={() => navigator.clipboard?.writeText(makeCapabilityReply())} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Copy customer reply</button><p className="text-[11px] text-amber-200">Live WhatsApp / social inbox is not connected yet.</p></div>}
+              {active === "replies" && <div className="space-y-3"><p className="text-xs text-slate-400">ग्राहक का जवाब यहाँ लिखें, फिर WhatsApp में खोलकर खुद जाँचें और Send दबाएँ।</p><label className="block space-y-1 text-xs text-slate-300">WhatsApp नंबर (देश कोड सहित, जैसे 923001234567)<input inputMode="tel" value={whatsAppNumber} onChange={e=>{setWhatsAppNumber(e.target.value);try{localStorage.setItem("ai-buddy-business-whatsapp",e.target.value);}catch{}}} placeholder="923001234567" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white"/></label><textarea value={customerMessage} onChange={e=>setCustomerMessage(e.target.value)} rows={7} className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-relaxed text-white"/><div className="flex flex-wrap gap-2"><button onClick={()=>navigator.clipboard?.writeText(customerMessage)} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Copy reply</button><button disabled={!/^\+?[0-9\s()-]{8,20}$/.test(whatsAppNumber)} onClick={()=>{const number=whatsAppNumber.replace(/\D/g,"");window.open(`https://wa.me/${number}?text=${encodeURIComponent(customerMessage)}`,"_blank","noopener,noreferrer");}} className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-xs font-bold disabled:opacity-40">Open WhatsApp chat</button></div><p className="text-[11px] text-amber-200">WhatsApp opens with your draft. You review it and press Send yourself. Automatic inbox and auto-send are not connected.</p></div>}
               {active === "handoff" && <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-slate-400">ग्राहक की अनुमति से उसकी जानकारी यहाँ दर्ज करें। नीचे मालिक के लिए संदेश तैयार होगा। अभी यह संदेश अपने-आप WhatsApp या SMS से नहीं भेजा जाता।</p>
                 <div className="grid gap-2 sm:grid-cols-2">
