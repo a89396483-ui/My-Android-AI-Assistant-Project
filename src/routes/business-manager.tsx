@@ -58,6 +58,8 @@ function BusinessManager() {
   const [campaignTone, setCampaignTone] = useState("Friendly");
   const [campaignLanguage, setCampaignLanguage] = useState("Urdu");
   const [campaignResult, setCampaignResult] = useState<ReturnType<typeof makeMarketingCampaign> | null>(null);
+  const [aiMarketingPlan, setAiMarketingPlan] = useState("");
+  const [aiMarketingBusy, setAiMarketingBusy] = useState(false);
   const [socialPosts, setSocialPosts] = useState<ReturnType<typeof buildSocialChannelPosts>>([]);
   const [viralType, setViralType] = useState<"business" | "music">("business");
   const [viralName, setViralName] = useState("");
@@ -145,6 +147,65 @@ function BusinessManager() {
     setAccounts(next);
     try { localStorage.setItem("ai-buddy-business-accounts", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
     setAccountAmount(""); setAccountNote("");
+  }
+
+  async function createMarketingStrategy() {
+    setAiMarketingBusy(true);
+    setAiMarketingPlan("");
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lang: campaignLanguage === "Urdu" ? "ur" : campaignLanguage === "Roman Urdu" ? "roman-ur" : "en",
+          mode: "manager",
+          messages: [{
+            role: "user",
+            text: [
+              "Act as a practical marketing manager for a very small Pakistani business.",
+              "Create a realistic, low-budget marketing plan in " + campaignLanguage + ".",
+              "Business: " + (profile.name || "Not provided"),
+              "Products/services: " + (profile.service || "Not provided"),
+              "Area: " + (profile.area || "Not provided"),
+              "Target customers: " + (campaignAudience || "Identify likely local buyers"),
+              "Offer: " + (offer || "Suggest a low-risk introductory offer"),
+              "Goal: " + campaignObjective,
+              "Include: ideal customer groups, positioning, one clear differentiator, weekly plan, Facebook/Instagram/WhatsApp content ideas, short video ideas, sample ad copy, customer follow-up approach, a zero/low-spend option, a suggested test budget in PKR only if useful, and simple measures for enquiries and sales.",
+              "Do not promise viral reach or guaranteed sales. Do not invent market research, customer names, or results. Clearly label assumptions and ask the owner to verify prices, stock and claims. Do not recommend spam or unsolicited bulk messages."
+            ].join("\n")
+          }]
+        })
+      });
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({})) as { error?: string };
+        throw new Error(payload.error || "AI service is not configured yet.");
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let answer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const event = JSON.parse(raw) as { choices?: Array<{ delta?: { content?: string } }> };
+            answer += event.choices?.[0]?.delta?.content ?? "";
+          } catch { /* Ignore incomplete SSE frames. */ }
+        }
+      }
+      setAiMarketingPlan(answer.trim() || "AI returned an empty plan. Please try again.");
+    } catch (error) {
+      setAiMarketingPlan(error instanceof Error ? error.message : "AI marketing plan failed.");
+    } finally {
+      setAiMarketingBusy(false);
+    }
   }
 
   async function createProspectPlan() {
@@ -305,6 +366,19 @@ function BusinessManager() {
                   <label className="space-y-1 text-xs text-slate-300">Writing style<select value={campaignTone} onChange={e=>setCampaignTone(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm"><option>Friendly</option><option>Professional</option><option>Energetic</option><option>Simple and trustworthy</option></select></label>
                   <label className="space-y-1 text-xs text-slate-300">Offer (optional)<input value={offer} onChange={e=>setOffer(e.target.value)} placeholder="e.g. Free first sample" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /></label>
                 </div>
+                <section className="space-y-3 rounded-2xl border border-cyan-300/20 bg-gradient-to-br from-cyan-500/10 to-violet-500/10 p-4">
+                  <div>
+                    <p className="text-sm font-bold text-cyan-200">AI Marketing Manager</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-300">صرف پوسٹ نہیں: کاروبار، گاہک اور بجٹ کے مطابق مکمل مارکیٹنگ حکمتِ عملی، ہفتہ وار مہم اور کم خرچ اشتہاری آئیڈیاز تیار کریں۔ نتائج کی ضمانت نہیں؛ مالک اشاعت سے پہلے ہر چیز چیک کرے۔</p>
+                  </div>
+                  <button onClick={() => void createMarketingStrategy()} disabled={aiMarketingBusy} className="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 px-4 py-3 text-sm font-bold disabled:opacity-50">
+                    {aiMarketingBusy ? "AI is preparing your marketing strategy…" : "Generate full marketing strategy with AI"}
+                  </button>
+                  {aiMarketingPlan && <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-3">
+                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-200">{aiMarketingPlan}</pre>
+                    <button onClick={() => navigator.clipboard?.writeText(aiMarketingPlan)} className="rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold">Copy marketing strategy</button>
+                  </div>}
+                </section>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => { const result = makeMarketingCampaign(profile, { platform: campaignPlatform, objective: campaignObjective, audience: campaignAudience, tone: campaignTone, language: campaignLanguage, offer }); setCampaignResult(result); setDraft(result.post); }} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-bold">Build campaign brief</button>
                   <button onClick={() => setSocialPosts(buildSocialChannelPosts({ businessName: profile.name, services: profile.service, area: profile.area, publicContact: profile.publicContact, offer, language: campaignLanguage }))} className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 py-3 text-sm font-bold">Create posts for all platforms</button>
