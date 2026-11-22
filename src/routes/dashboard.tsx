@@ -37,9 +37,23 @@ const mainServices = [
   {
     title: "Business Marketing AI",
     description: "Create business promotions, platform-specific posts, offers and campaign ideas to reach more customers.",
-    to: "/studio" as const,
+    to: "/marketing-manager" as const,
     icon: BriefcaseBusiness,
     status: "Business growth",
+  },
+  {
+    title: "Accounts & Hisab-Kitab AI",
+    description: "Record sales, expenses, customer credit, supplier dues and stock in one simple workspace.",
+    to: "/accounts" as const,
+    icon: LayoutDashboard,
+    status: "Local records",
+  },
+  {
+    title: "Orders & Customer Manager",
+    description: "Record orders, prepare COD confirmations and track delivery or returns.",
+    to: "/orders" as const,
+    icon: Users,
+    status: "Local order tracking",
   },
 ];
 
