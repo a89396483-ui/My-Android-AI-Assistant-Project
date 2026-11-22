@@ -50,6 +50,14 @@ function BusinessManager() {
   const [leadName, setLeadName] = useState("");
   const [leadContact, setLeadContact] = useState("");
   const [leadNeed, setLeadNeed] = useState("");
+  type GrowthLead = { id: string; business: string; area: string; need: string; contact: string; status: "Research" | "Draft ready" | "Contacted" | "Interested" | "Not interested"; draft: string; createdAt: string; followUp: string };
+  const [growthLeads, setGrowthLeads] = useState<GrowthLead[]>([]);
+  const [growthBusiness, setGrowthBusiness] = useState("");
+  const [growthNeed, setGrowthNeed] = useState("");
+  const [growthContact, setGrowthContact] = useState("");
+  const [growthFollowUp, setGrowthFollowUp] = useState("");
+  const [growthDraft, setGrowthDraft] = useState("");
+
   const [offer, setOffer] = useState("");
   const [draft, setDraft] = useState("");
   const [campaignPlatform, setCampaignPlatform] = useState("Facebook / Instagram");
@@ -92,6 +100,8 @@ function BusinessManager() {
     try {
       const storedProfile = localStorage.getItem("ai-buddy-business-profile");
       const storedLeads = localStorage.getItem("ai-buddy-business-leads");
+      const storedGrowthLeads = localStorage.getItem("ai-buddy-company-growth-leads");
+      if (storedGrowthLeads) setGrowthLeads(JSON.parse(storedGrowthLeads));
       const storedAccounts = localStorage.getItem("ai-buddy-business-accounts");
       const storedWhatsApp = localStorage.getItem("ai-buddy-business-whatsapp");
       if (storedWhatsApp) setWhatsAppNumber(storedWhatsApp);
@@ -247,6 +257,22 @@ function BusinessManager() {
     } finally {
       setProspectAiBusy(false);
     }
+  }
+
+  function saveGrowthLead(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!growthBusiness.trim()) return;
+    const draft = growthDraft.trim() || `Assalam-o-Alaikum! I came across ${growthBusiness} in ${prospectArea}. AI Buddy helps small businesses prepare Urdu/English customer replies, social media content and simple marketing plans. I can share a short sample based on ${growthNeed || "your business"} if you are interested. No pressure—please let me know.`;
+    const next: GrowthLead[] = [{ id: String(Date.now()), business: growthBusiness.trim(), area: prospectArea, need: growthNeed.trim(), contact: growthContact.trim(), status: "Draft ready", draft, createdAt: new Date().toLocaleDateString(), followUp: growthFollowUp }, ...growthLeads];
+    setGrowthLeads(next);
+    try { localStorage.setItem("ai-buddy-company-growth-leads", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
+    setGrowthBusiness(""); setGrowthNeed(""); setGrowthContact(""); setGrowthFollowUp(""); setGrowthDraft("");
+  }
+
+  function updateGrowthLead(id: string, patch: Partial<GrowthLead>) {
+    const next = growthLeads.map((lead) => lead.id === id ? { ...lead, ...patch } : lead);
+    setGrowthLeads(next);
+    try { localStorage.setItem("ai-buddy-company-growth-leads", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
   }
 
   function addLead(event: FormEvent<HTMLFormElement>) {
@@ -414,6 +440,19 @@ function BusinessManager() {
               </div>}
               {active === "leads" && <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-slate-400">ہم ایسے لوگوں کو تلاش کرنے کی حکمت عملی بنائیں گے جنہیں واقعی AI Buddy کی خدمات چاہییں۔ پہلے ان کے کاروبار یا ضرورت کے مطابق عوامی گروپس، بزنس ڈائریکٹریز اور پبلک پیجز میں تحقیق کریں؛ پھر متعلقہ رابطے کو ایک اجازت والا تعارفی پیغام بھیجیں۔ کوئی نجی ڈیٹا اسکریپنگ یا اسپیم نہیں۔</p>
+                <section className="space-y-3 rounded-2xl border border-violet-300/20 bg-violet-500/5 p-4">
+                  <div><h3 className="text-sm font-bold text-violet-200">AI Buddy — Our Customer Growth Engine</h3><p className="mt-1 text-xs leading-relaxed text-slate-300">یہ حصہ AI Buddy کے اپنے نئے کاروباری گاہکوں کا ریکارڈ رکھتا ہے۔ کاروبار کی معلومات درج کریں، تعارفی پیغام تیار کریں، پھر خود جائزہ لے کر رابطہ کریں۔ ابھی یہ خود انٹرنیٹ پر کاروبار تلاش یا پیغام ارسال نہیں کرتا۔</p></div>
+                  <form onSubmit={saveGrowthLead} className="grid gap-2 sm:grid-cols-2">
+                    <input required value={growthBusiness} onChange={e=>setGrowthBusiness(e.target.value)} placeholder="Business / shop name" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/>
+                    <input value={growthContact} onChange={e=>setGrowthContact(e.target.value)} placeholder="Public contact (optional)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/>
+                    <input value={growthNeed} onChange={e=>setGrowthNeed(e.target.value)} placeholder="What help may they need?" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2"/>
+                    <label className="space-y-1 text-xs text-slate-400">Follow-up date (optional)<input type="date" value={growthFollowUp} onChange={e=>setGrowthFollowUp(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 p-3 text-sm text-white"/></label>
+                    <textarea value={growthDraft} onChange={e=>setGrowthDraft(e.target.value)} placeholder="Optional: write or paste a personalized intro message. Leave blank for a starter draft." className="min-h-20 rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2"/>
+                    <button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-sm font-bold sm:col-span-2">Save prospect + prepare intro draft</button>
+                  </form>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">{(["Research","Draft ready","Contacted","Interested","Not interested"] as const).map(status=><div key={status} className="rounded-xl border border-white/10 bg-black/20 p-2"><p className="text-[10px] text-slate-400">{status}</p><p className="text-lg font-bold">{growthLeads.filter(lead=>lead.status===status).length}</p></div>)}</div>
+                  {growthLeads.length===0 ? <p className="text-xs text-slate-500">Your AI Buddy prospect list is empty. Add the first business above.</p> : <div className="space-y-2">{growthLeads.map(lead=><article key={lead.id} className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-3"><div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-sm font-semibold">{lead.business}</p><p className="text-[10px] text-slate-400">{lead.area} · {lead.contact || "No contact saved"} · Added {lead.createdAt}</p></div><select aria-label={`Status for ${lead.business}`} value={lead.status} onChange={e=>updateGrowthLead(lead.id,{status:e.target.value as GrowthLead["status"]})} className="rounded-lg border border-white/10 bg-slate-950 p-2 text-xs">{(["Research","Draft ready","Contacted","Interested","Not interested"] as const).map(status=><option key={status}>{status}</option>)}</select></div><p className="text-xs text-slate-300">Possible need: {lead.need || "Not specified"}</p><pre className="whitespace-pre-wrap rounded-lg bg-black/30 p-3 font-sans text-xs leading-relaxed text-slate-200">{lead.draft}</pre><div className="flex flex-wrap items-center gap-2"><button onClick={()=>navigator.clipboard?.writeText(lead.draft)} className="rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold">Copy intro</button><label className="flex items-center gap-2 text-[10px] text-slate-400">Follow-up <input type="date" value={lead.followUp} onChange={e=>updateGrowthLead(lead.id,{followUp:e.target.value})} className="rounded-lg border border-white/10 bg-slate-950 p-2 text-xs text-white"/></label></div></article>)}</div>}
+                </section>
                 <label className="block space-y-1 text-xs text-slate-300">Target city / area<input value={prospectArea} onChange={e=>setProspectArea(e.target.value)} placeholder="Karachi" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /></label>
                 <button onClick={() => void createProspectPlan()} disabled={prospectAiBusy} className="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 px-4 py-3 text-sm font-bold disabled:opacity-50">{prospectAiBusy ? "AI is preparing your customer plan…" : "Create a detailed customer-finding plan with AI"}</button>
                 {prospectAiPlan && <div className="whitespace-pre-wrap rounded-2xl border border-cyan-300/20 bg-black/20 p-4 text-xs leading-relaxed text-slate-200">{prospectAiPlan}<button onClick={() => navigator.clipboard?.writeText(prospectAiPlan)} className="mt-3 block rounded-lg bg-white/10 px-3 py-2 font-semibold">Copy AI customer plan</button></div>}
