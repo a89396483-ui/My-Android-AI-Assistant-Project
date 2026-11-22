@@ -15,6 +15,7 @@ import { Route as SoftwareBuilderRouteImport } from './routes/software-builder'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as MarketingManagerRouteImport } from './routes/marketing-manager'
 import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as BackupRouteImport } from './routes/backup'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiSongRouteImport } from './routes/api/song'
 
@@ -27,21 +28,22 @@ const SoftwareBuilderRoute = SoftwareBuilderRouteImport.update({ id: '/software-
 const AccountsRoute = AccountsRouteImport.update({ id: '/accounts', path: '/accounts', getParentRoute: () => rootRouteImport } as any)
 const MarketingManagerRoute = MarketingManagerRouteImport.update({ id: '/marketing-manager', path: '/marketing-manager', getParentRoute: () => rootRouteImport } as any)
 const OrdersRoute = OrdersRouteImport.update({ id: '/orders', path: '/orders', getParentRoute: () => rootRouteImport } as any)
+const BackupRoute = BackupRouteImport.update({ id: '/backup', path: '/backup', getParentRoute: () => rootRouteImport } as any)
 const ApiChatRoute = ApiChatRouteImport.update({ id: '/api/chat', path: '/api/chat', getParentRoute: () => rootRouteImport } as any)
 const ApiSongRoute = ApiSongRouteImport.update({ id: '/api/song', path: '/api/song', getParentRoute: () => rootRouteImport } as any)
 
-export interface FileRoutesByFullPath { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/software-builder': typeof SoftwareBuilderRoute; '/accounts': typeof AccountsRoute; '/marketing-manager': typeof MarketingManagerRoute; '/orders': typeof OrdersRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
+export interface FileRoutesByFullPath { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/software-builder': typeof SoftwareBuilderRoute; '/accounts': typeof AccountsRoute; '/marketing-manager': typeof MarketingManagerRoute; '/orders': typeof OrdersRoute; '/backup': typeof BackupRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
 export interface FileRoutesByTo { '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/software-builder': typeof SoftwareBuilderRoute; '/accounts': typeof AccountsRoute; '/marketing-manager': typeof MarketingManagerRoute; '/orders': typeof OrdersRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
 export interface FileRoutesById { __root__: typeof rootRouteImport; '/': typeof IndexRoute; '/song': typeof SongRoute; '/business-manager': typeof BusinessManagerRoute; '/manager-ai': typeof ManagerAIRoute; '/studio': typeof StudioRoute; '/software-builder': typeof SoftwareBuilderRoute; '/accounts': typeof AccountsRoute; '/marketing-manager': typeof MarketingManagerRoute; '/orders': typeof OrdersRoute; '/api/chat': typeof ApiChatRoute; '/api/song': typeof ApiSongRoute }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/software-builder' | '/accounts' | '/marketing-manager' | '/orders' | '/api/chat' | '/api/song'
+  fullPaths: '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/software-builder' | '/accounts' | '/marketing-manager' | '/orders' | '/backup' | '/api/chat' | '/api/song'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/software-builder' | '/accounts' | '/marketing-manager' | '/orders' | '/api/chat' | '/api/song'
   id: '__root__' | '/' | '/song' | '/business-manager' | '/manager-ai' | '/studio' | '/software-builder' | '/accounts' | '/marketing-manager' | '/orders' | '/api/chat' | '/api/song'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren { IndexRoute: typeof IndexRoute; SongRoute: typeof SongRoute; BusinessManagerRoute: typeof BusinessManagerRoute; ManagerAIRoute: typeof ManagerAIRoute; StudioRoute: typeof StudioRoute; SoftwareBuilderRoute: typeof SoftwareBuilderRoute; AccountsRoute: typeof AccountsRoute; MarketingManagerRoute: typeof MarketingManagerRoute; OrdersRoute: typeof OrdersRoute; ApiChatRoute: typeof ApiChatRoute; ApiSongRoute: typeof ApiSongRoute }
+export interface RootRouteChildren { IndexRoute: typeof IndexRoute; SongRoute: typeof SongRoute; BusinessManagerRoute: typeof BusinessManagerRoute; ManagerAIRoute: typeof ManagerAIRoute; StudioRoute: typeof StudioRoute; SoftwareBuilderRoute: typeof SoftwareBuilderRoute; AccountsRoute: typeof AccountsRoute; MarketingManagerRoute: typeof MarketingManagerRoute; OrdersRoute: typeof OrdersRoute; BackupRoute: typeof BackupRoute; ApiChatRoute: typeof ApiChatRoute; ApiSongRoute: typeof ApiSongRoute }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
@@ -54,11 +56,12 @@ declare module '@tanstack/react-router' {
     '/accounts': { id: '/accounts'; path: '/accounts'; fullPath: '/accounts'; preLoaderRoute: typeof AccountsRouteImport; parentRoute: typeof rootRouteImport }
     '/marketing-manager': { id: '/marketing-manager'; path: '/marketing-manager'; fullPath: '/marketing-manager'; preLoaderRoute: typeof MarketingManagerRouteImport; parentRoute: typeof rootRouteImport }
     '/orders': { id: '/orders'; path: '/orders'; fullPath: '/orders'; preLoaderRoute: typeof OrdersRouteImport; parentRoute: typeof rootRouteImport }
+    '/backup': { id: '/backup'; path: '/backup'; fullPath: '/backup'; preLoaderRoute: typeof BackupRouteImport; parentRoute: typeof rootRouteImport }
     '/api/chat': { id: '/api/chat'; path: '/api/chat'; fullPath: '/api/chat'; preLoaderRoute: typeof ApiChatRouteImport; parentRoute: typeof rootRouteImport }
     '/api/song': { id: '/api/song'; path: '/api/song'; fullPath: '/api/song'; preLoaderRoute: typeof ApiSongRouteImport; parentRoute: typeof rootRouteImport }
   }
 }
-const rootRouteChildren: RootRouteChildren = { IndexRoute, SongRoute, BusinessManagerRoute, ManagerAIRoute, StudioRoute, SoftwareBuilderRoute, AccountsRoute, MarketingManagerRoute, OrdersRoute, ApiChatRoute, ApiSongRoute }
+const rootRouteChildren: RootRouteChildren = { IndexRoute, SongRoute, BusinessManagerRoute, ManagerAIRoute, StudioRoute, SoftwareBuilderRoute, AccountsRoute, MarketingManagerRoute, OrdersRoute, BackupRoute, ApiChatRoute, ApiSongRoute }
 export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'
