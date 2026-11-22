@@ -127,7 +127,7 @@ function BusinessManager() {
   }
 
   function exportBusinessData() {
-    const payload = { profile, leads, accounts, exportedAt: new Date().toISOString() };
+    const payload = { profile, leads, growthLeads, accounts, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -137,9 +137,9 @@ function BusinessManager() {
 
   function clearBusinessData() {
     if (!window.confirm("Delete this device’s saved Business Manager profile, leads and accounts?")) return;
-    for (const key of ["ai-buddy-business-profile", "ai-buddy-business-leads", "ai-buddy-business-accounts", "ai-buddy-business-whatsapp", "ai-buddy-business-campaign-drafts"]) localStorage.removeItem(key);
+    for (const key of ["ai-buddy-business-profile", "ai-buddy-business-leads", "ai-buddy-company-growth-leads", "ai-buddy-business-accounts", "ai-buddy-business-whatsapp", "ai-buddy-business-campaign-drafts"]) localStorage.removeItem(key);
     setProfile({ name: "", service: "", area: "", publicContact: "", ownerContact: "", language: "Urdu" });
-    setLeads([]); setAccounts([]); setSaved(false);
+    setLeads([]); setGrowthLeads([]); setAccounts([]); setSaved(false);
   }
 
   function saveProfile() {
