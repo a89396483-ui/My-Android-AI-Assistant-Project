@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Bot, BriefcaseBusiness, Code2, LayoutDashboard, Music, Sparkles, Users, WandSparkles } from "lucide-react";
+import { ArrowRight, Bot, BriefcaseBusiness, Code2, LayoutDashboard, Music, ShieldCheck, Sparkles, Users, WandSparkles } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -71,6 +71,13 @@ const tools = [
     to: "/studio" as const,
     icon: WandSparkles,
     status: "Draft tools",
+  },
+  {
+    title: "Backup & Restore",
+    description: "Download a copy of your business records or restore them on this phone.",
+    to: "/backup" as const,
+    icon: ShieldCheck,
+    status: "Protect your data",
   },
   {
     title: "Business Manager",
