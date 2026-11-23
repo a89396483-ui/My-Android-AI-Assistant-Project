@@ -68,5 +68,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    if ("serviceWorker" in navigator && window.location.protocol === "https:") {
+      navigator.serviceWorker.register("/sw.js").catch((error) => {
+        console.warn("AI-Buddy offline support could not be enabled.", error);
+      });
+    }
+  }, []);
   return <QueryClientProvider client={queryClient}><Outlet /></QueryClientProvider>;
 }
