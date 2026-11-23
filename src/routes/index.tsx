@@ -63,8 +63,8 @@ function Home() {
     window.speechSynthesis?.cancel();
   }, []);
 
-  async function send() {
-    const prompt = text.trim();
+  async function send(voicePrompt?: string) {
+    const prompt = (voicePrompt ?? text).trim();
     if ((!prompt && !image) || busy) return;
     const outgoing: Message = { role: "user", text: prompt, ...(image ? { image } : {}) };
     const next = [...messages, outgoing];
@@ -105,6 +105,8 @@ function Home() {
         }
       }
       if (!answer.trim()) throw new Error("AI-Buddy returned an empty answer. Please try again.");
+      // Read every AI reply aloud so the owner does not need to read the screen.
+      speak(answer);
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
       setMessages(next);
@@ -133,11 +135,12 @@ function Home() {
     if (!("speechSynthesis" in window)) { toast.error("Voice playback is not supported in this browser."); return; }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(message);
-    utterance.lang = language === "ur" ? "ur-PK" : language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : language === "en" ? "en-US" : "ur-PK";
+    const hasUrduScript = /[\\u0600-\\u06FF]/.test(message);\n    utterance.lang = language === "ur" || (language === "auto" && hasUrduScript) ? "ur-PK" : language === "hi" || language === "auto" ? "hi-IN" : language === "pa" ? "pa-IN" : language === "en" ? "en-US" : "ur-PK";
     utterance.rate = 0.92;
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
-    window.speechSynthesis.speak(utterance); setSpeaking(true);
+    utterance.onstart = () => setSpeaking(true);
+    window.speechSynthesis.speak(utterance);
   }
 
   function startVoice() {
@@ -145,9 +148,9 @@ function Home() {
       ?? (window as Window & { webkitSpeechRecognition?: new () => SpeechRecognitionLike }).webkitSpeechRecognition;
     if (!SpeechRecognition) { toast.error("Voice typing is not supported here. Please type your message."); return; }
     const recognition = new SpeechRecognition();
-    recognition.lang = language === "ur" ? "ur-PK" : language === "hi" ? "hi-IN" : language === "pa" ? "pa-IN" : language === "en" ? "en-US" : "ur-PK";
+    recognition.lang = language === "ur" ? "ur-PK" : language === "hi" || language === "auto" ? "hi-IN" : language === "pa" ? "pa-IN" : language === "en" ? "en-US" : "ur-PK";
     recognition.interimResults = false;
-    recognition.onresult = (event) => setText((old) => old + event.results[0][0].transcript);
+    recognition.onresult = (event) => {\n      const spokenText = event.results[0][0].transcript.trim();\n      setText(spokenText);\n      setListening(false);\n      if (spokenText) void send(spokenText);\n    };
     recognition.onerror = () => { setListening(false); toast.error("Voice typing stopped. You can type instead."); };
     recognition.onend = () => setListening(false);
     recognitionRef.current = recognition; setListening(true); recognition.start();
@@ -209,12 +212,12 @@ function Home() {
             <div className="flex gap-1">
               <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => addImage(e.target.files?.[0])} />
               <button onClick={() => fileRef.current?.click()} className="rounded-xl bg-secondary p-2.5" aria-label="Add screenshot or photo"><ImagePlus className="size-5" /></button>
-              <button onClick={listening ? () => recognitionRef.current?.stop() : startVoice} className={`rounded-xl p-2.5 ${listening ? "bg-destructive text-white" : "bg-secondary"}`} aria-label="Voice typing">{listening ? <Square className="size-5" /> : <Mic className="size-5" />}</button>
+              <button onClick={listening ? () => recognitionRef.current?.stop() : startVoice} className={`flex min-w-24 items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold ${listening ? "bg-destructive text-white" : "bg-primary text-primary-foreground"}`} aria-label={listening ? "Stop listening" : "Tap and speak to AI Buddy"}>{listening ? <><Square className="size-5" /> सुन रहा हूँ</> : <><Mic className="size-5" /> बोलें</>}</button>
             </div>
             <button onClick={() => void send()} disabled={busy || (!text.trim() && !image)} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 font-semibold text-primary-foreground disabled:opacity-50"><Send className="size-4" /> Send</button>
           </div>
         </div>
-        <p className="pt-2 text-center text-[11px] text-muted-foreground">Chat and saved memories are stored on this phone. Do not share passwords or OTP codes.</p>
+        <p className="pt-2 text-center text-xs text-muted-foreground">माइक दबाएँ और बोलें। AI जवाब आवाज़ में सुनाएगा। पहली बार माइक की अनुमति माँगे तो Allow दबाएँ।</p>
       </section>
     </main>
   );
