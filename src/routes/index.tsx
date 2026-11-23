@@ -135,7 +135,8 @@ function Home() {
     if (!("speechSynthesis" in window)) { toast.error("Voice playback is not supported in this browser."); return; }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(message);
-    const hasUrduScript = /[\\u0600-\\u06FF]/.test(message);\n    utterance.lang = language === "ur" || (language === "auto" && hasUrduScript) ? "ur-PK" : language === "hi" || language === "auto" ? "hi-IN" : language === "pa" ? "pa-IN" : language === "en" ? "en-US" : "ur-PK";
+    const hasUrduScript = /[\u0600-\u06FF]/.test(message);
+    utterance.lang = language === "ur" || (language === "auto" && hasUrduScript) ? "ur-PK" : language === "hi" || language === "auto" ? "hi-IN" : language === "pa" ? "pa-IN" : language === "en" ? "en-US" : "ur-PK";
     utterance.rate = 0.92;
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
@@ -150,7 +151,12 @@ function Home() {
     const recognition = new SpeechRecognition();
     recognition.lang = language === "ur" ? "ur-PK" : language === "hi" || language === "auto" ? "hi-IN" : language === "pa" ? "pa-IN" : language === "en" ? "en-US" : "ur-PK";
     recognition.interimResults = false;
-    recognition.onresult = (event) => {\n      const spokenText = event.results[0][0].transcript.trim();\n      setText(spokenText);\n      setListening(false);\n      if (spokenText) void send(spokenText);\n    };
+    recognition.onresult = (event) => {
+      const spokenText = event.results[0][0].transcript.trim();
+      setText(spokenText);
+      setListening(false);
+      if (spokenText) void send(spokenText);
+    };
     recognition.onerror = () => { setListening(false); toast.error("Voice typing stopped. You can type instead."); };
     recognition.onend = () => setListening(false);
     recognitionRef.current = recognition; setListening(true); recognition.start();
