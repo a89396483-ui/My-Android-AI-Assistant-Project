@@ -109,7 +109,8 @@ const tools = [
   },
 ];
 
-type Readiness = { chatProvider: string; freeHelper: string; openEndedChatReady: boolean; songAudioGeneration: string; socialAutoPublishing: string; customerPayments: string };
+type FeatureStatus = { id: string; name: string; status: string; detail: string };
+type Readiness = { chatProvider: string; freeHelper: string; openEndedChatReady: boolean; songAudioGeneration: string; socialAutoPublishing: string; customerPayments: string; features?: FeatureStatus[]; note?: string };
 
 function Dashboard() {
   const [readiness, setReadiness] = useState<Readiness | null>(null);
@@ -155,6 +156,23 @@ function Dashboard() {
             <p>Customer payments: <strong>{readiness?.customerPayments === "not-configured" ? "Not configured" : "Not checked"}</strong></p>
           </div>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">This checks whether server settings exist. It does not prove that an AI key works or that a payment or social account is connected.</p>
+        </section>
+
+        <section className="mb-7 rounded-3xl border border-border bg-card/80 p-4 sm:p-5">
+          <h2 className="font-semibold">AI Buddy — Full Work Checklist</h2>
+          <p className="mt-1 text-sm text-muted-foreground">یہ فہرست بتاتی ہے کہ کیا بنا ہے اور کیا باقی ہے۔</p>
+          <div className="mt-4 space-y-3">
+            {readiness?.features?.map((feature) => (
+              <div key={feature.id} className="border-b border-border/70 pb-3 last:border-0 last:pb-0">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong className="text-sm">{feature.name}</strong>
+                  <span className="rounded-full bg-secondary px-2 py-1 text-xs">{feature.status}</span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{feature.detail}</p>
+              </div>
+            )) ?? <p className="text-sm text-muted-foreground">فہرست لوڈ ہو رہی ہے۔ صفحہ دوبارہ کھولیں۔</p>}
+          </div>
+          {readiness?.note && <p className="mt-4 text-xs leading-5 text-muted-foreground">{readiness.note}</p>}
         </section>
 
         <section className="mb-7">
