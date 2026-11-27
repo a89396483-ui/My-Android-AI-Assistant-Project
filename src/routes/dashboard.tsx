@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Bot, BriefcaseBusiness, Code2, LayoutDashboard, Music, ShieldCheck, Sparkles, Users, WandSparkles } from "lucide-react";
+import { ArrowRight, Bot, BriefcaseBusiness, LayoutDashboard, Megaphone, MessageCircle, ShieldCheck, Sparkles, Users, WandSparkles } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "AI Buddy — Dashboard" },
-      { name: "description", content: "Open AI Buddy tools from one simple dashboard." },
+      { name: "description", content: "Open AI Buddy's three core business tools." },
     ],
   }),
   component: Dashboard,
@@ -14,46 +14,25 @@ export const Route = createFileRoute("/dashboard")({
 
 const mainServices = [
   {
-    title: "AI Buddy Conversation",
-    description: "A friendly multilingual assistant for natural, respectful conversations in Urdu, Hindi, Punjabi and English.",
-    to: "/" as const,
-    icon: Bot,
-    status: "Conversation assistant",
-  },
-  {
-    title: "Customer Finder AI",
-    description: "Organise potential customers, prepare personalised outreach messages and track follow-ups. Sending remains under your approval.",
+    title: "Shopkeeper Helper",
+    description: "Manage shop details, products and prices, record sales and expenses, track customer enquiries and prepare simple business reports.",
     to: "/business-manager" as const,
-    icon: Users,
-    status: "Find and follow up",
-  },
-  {
-    title: "Music Marketing AI",
-    description: "Plan song launches, create captions and short-video campaign drafts, and prepare posts for connected social accounts.",
-    to: "/studio" as const,
-    icon: Music,
-    status: "Music promotion",
-  },
-  {
-    title: "Business Marketing AI",
-    description: "Create business promotions, platform-specific posts, offers and campaign ideas to reach more customers.",
-    to: "/marketing-manager" as const,
     icon: BriefcaseBusiness,
-    status: "Business growth",
+    status: "Shop workspace",
   },
   {
-    title: "Accounts & Hisab-Kitab AI",
-    description: "Record sales, expenses, customer credit, supplier dues and stock in one simple workspace.",
-    to: "/accounts" as const,
-    icon: LayoutDashboard,
-    status: "Local records",
+    title: "Customer Message Helper",
+    description: "Prepare polite Urdu, Hindi, Punjabi and English replies to customer questions, save enquiries and hand important conversations to the shop owner.",
+    to: "/business-manager" as const,
+    icon: MessageCircle,
+    status: "Reply drafts",
   },
   {
-    title: "Orders & Customer Manager",
-    description: "Record orders, prepare COD confirmations and track delivery or returns.",
-    to: "/orders" as const,
-    icon: Users,
-    status: "Local order tracking",
+    title: "Marketing Tool",
+    description: "Create business posts, offers, captions and a low-cost marketing plan. Review each post before publishing; social account connection is not active yet.",
+    to: "/marketing-manager" as const,
+    icon: Megaphone,
+    status: "Create and test posts",
   },
 ];
 
@@ -97,14 +76,14 @@ const tools = [
     title: "Mini Software Builder",
     description: "Plan a small app or customer tool and prepare a starter specification.",
     to: "/software-builder" as const,
-    icon: Code2,
+    icon: Users,
     status: "Planning tool",
   },
   {
     title: "Song Studio",
     description: "Create original song lyrics and develop a music idea.",
     to: "/song" as const,
-    icon: Music,
+    icon: Sparkles,
     status: "Lyrics drafts",
   },
 ];
@@ -139,7 +118,7 @@ function Dashboard() {
         <section className="mb-6 rounded-3xl border border-border bg-card/80 p-4 sm:p-5">
           <h2 className="font-semibold">Welcome to AI Buddy</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Open all the current tools from this one dashboard. Some tools prepare drafts or plans; features that need an AI provider or an outside account will only work after that connection is configured and tested.
+            Start with these three core services. Some actions prepare drafts or save records on this phone; live AI, social publishing and payment connections must be configured and tested separately.
           </p>
         </section>
 
@@ -151,7 +130,7 @@ function Dashboard() {
           <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
             <p>Free helper: <strong>{readiness?.freeHelper === "available" ? "Ready" : "Checking"}</strong></p>
             <p>Full AI chat: <strong>{readiness?.openEndedChatReady ? (readiness.chatProvider === "gemini" ? "Gemini key set" : "Gateway key set") : "Needs provider key"}</strong></p>
-            <p>Sung audio: <strong>{readiness?.songAudioGeneration === "not-connected" ? "Not connected" : "Not checked"}</strong></p>
+            <p>Song audio: <strong>{readiness?.songAudioGeneration === "not-connected" ? "Not connected" : "Not checked"}</strong></p>
             <p>Automatic social posting: <strong>{readiness?.socialAutoPublishing === "not-connected" ? "Not connected" : "Not checked"}</strong></p>
             <p>Customer payments: <strong>{readiness?.customerPayments === "not-configured" ? "Not configured" : "Not checked"}</strong></p>
           </div>
@@ -177,8 +156,8 @@ function Dashboard() {
 
         <section className="mb-7">
           <div className="mb-3">
-            <h2 className="text-lg font-bold">Four Main AI Services</h2>
-            <p className="mt-1 text-sm text-muted-foreground">The four core services of the AI Buddy business.</p>
+            <h2 className="text-lg font-bold">Three Main AI Services</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Shop management, customer replies and marketing — built into the existing AI Buddy project.</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {mainServices.map((service) => {
