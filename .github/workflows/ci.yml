@@ -1,6 +1,7 @@
 name: AI Buddy CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
