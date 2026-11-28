@@ -84,6 +84,11 @@ function BusinessManager() {
   const [prospectArea, setProspectArea] = useState("Karachi");
   const prospectingPlan = getCustomerProspectingPlan(prospectArea);
   const [saved, setSaved] = useState(false);
+  type StockItem = { id: string; name: string; price: number; quantity: number; updatedAt: string };
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const [stockName, setStockName] = useState("");
+  const [stockPrice, setStockPrice] = useState("");
+  const [stockQuantity, setStockQuantity] = useState("");
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [accountKind, setAccountKind] = useState<"income" | "expense">("income");
   const [accountAmount, setAccountAmount] = useState("");
@@ -104,6 +109,8 @@ function BusinessManager() {
       const storedLeads = localStorage.getItem("ai-buddy-business-leads");
       const storedGrowthLeads = localStorage.getItem("ai-buddy-company-growth-leads");
       if (storedGrowthLeads) setGrowthLeads(JSON.parse(storedGrowthLeads));
+      const storedStock = localStorage.getItem("ai-buddy-business-stock");
+      if (storedStock) setStockItems(JSON.parse(storedStock));
       const storedAccounts = localStorage.getItem("ai-buddy-business-accounts");
       const storedWhatsApp = localStorage.getItem("ai-buddy-business-whatsapp");
       if (storedWhatsApp) setWhatsAppNumber(storedWhatsApp);
@@ -139,9 +146,9 @@ function BusinessManager() {
 
   function clearBusinessData() {
     if (!window.confirm("Delete this device’s saved Business Manager profile, leads and accounts?")) return;
-    for (const key of ["ai-buddy-business-profile", "ai-buddy-business-leads", "ai-buddy-company-growth-leads", "ai-buddy-business-accounts", "ai-buddy-business-whatsapp", "ai-buddy-business-campaign-drafts"]) localStorage.removeItem(key);
+    for (const key of ["ai-buddy-business-profile", "ai-buddy-business-leads", "ai-buddy-company-growth-leads", "ai-buddy-business-accounts", "ai-buddy-business-whatsapp", "ai-buddy-business-campaign-drafts", "ai-buddy-business-stock"]) localStorage.removeItem(key);
     setProfile({ name: "", service: "", area: "", publicContact: "", ownerContact: "", language: "Urdu" });
-    setLeads([]); setGrowthLeads([]); setAccounts([]); setSaved(false);
+    setLeads([]); setGrowthLeads([]); setAccounts([]); setStockItems([]); setSaved(false);
   }
 
   function saveProfile() {
@@ -149,6 +156,25 @@ function BusinessManager() {
       localStorage.setItem("ai-buddy-business-profile", JSON.stringify(profile));
       setSaved(true);
     } catch { setSaved(false); }
+  }
+
+  function addStockItem(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = stockName.trim();
+    const price = Number(stockPrice);
+    const quantity = Number(stockQuantity);
+    if (!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(quantity) || quantity < 0) return;
+    const next = [{ id: String(Date.now()), name, price, quantity, updatedAt: new Date().toLocaleDateString() }, ...stockItems];
+    setStockItems(next);
+    try { localStorage.setItem("ai-buddy-business-stock", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
+    setStockName(""); setStockPrice(""); setStockQuantity("");
+  }
+
+  function updateStockQuantity(id: string, quantity: number) {
+    if (!Number.isInteger(quantity) || quantity < 0) return;
+    const next = stockItems.map((item) => item.id === id ? { ...item, quantity, updatedAt: new Date().toLocaleDateString() } : item);
+    setStockItems(next);
+    try { localStorage.setItem("ai-buddy-business-stock", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
   }
 
   function addAccountEntry(event: FormEvent<HTMLFormElement>) {
@@ -544,7 +570,19 @@ function BusinessManager() {
                 </form>
                 {accounts.map(entry=><div key={entry.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-3"><div><p className="text-sm font-semibold">{entry.note || (entry.kind === "income" ? "Income" : "Expense")}</p><p className="text-[10px] text-slate-500">{entry.date}</p></div><p className={`text-sm font-bold ${entry.kind === "income" ? "text-emerald-300" : "text-rose-300"}`}>{entry.kind === "income" ? "+" : "-"}Rs {entry.amount.toLocaleString("en-PK")}</p></div>)}
               </div>}
-              {active === "business" && <div className="space-y-3"><p className="text-xs leading-relaxed text-slate-400">अपने बिज़नेस का नाम, सेवा, इलाका और संपर्क नंबर दर्ज करने के लिए Settings खोलें।</p><button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Set up business profile</button></div>}
+              {active === "business" && <div className="space-y-4">
+                <p className="text-xs leading-relaxed text-slate-400">दुकान का सामान, बिक्री कीमत और बचा हुआ स्टॉक दर्ज करें। यह रिकॉर्ड अभी इसी फोन/ब्राउज़र में सेव होगा।</p>
+                <button onClick={()=>setActive("settings")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Set up business profile</button>
+                <form onSubmit={addStockItem} className="grid gap-2 sm:grid-cols-3">
+                  <input required value={stockName} onChange={e=>setStockName(e.target.value)} placeholder="सामान का नाम" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/>
+                  <input required type="number" min="0" step="0.01" value={stockPrice} onChange={e=>setStockPrice(e.target.value)} placeholder="कीमत (PKR)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/>
+                  <input required type="number" min="0" step="1" value={stockQuantity} onChange={e=>setStockQuantity(e.target.value)} placeholder="मात्रा / स्टॉक" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm"/>
+                  <button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-sm font-bold sm:col-span-3">सामान सेव करें</button>
+                </form>
+                <div className="space-y-2">
+                  {stockItems.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-xs text-slate-500">अभी कोई सामान दर्ज नहीं है।</p> : stockItems.map(item=><article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-3"><div><p className="text-sm font-semibold">{item.name}</p><p className="text-xs text-slate-400">Rs {item.price.toLocaleString("en-PK")} · अपडेट {item.updatedAt}</p></div><label className="text-xs text-slate-300">बचा स्टॉक<input aria-label={`Stock quantity for ${item.name}`} type="number" min="0" step="1" value={item.quantity} onChange={e=>updateStockQuantity(item.id,Number(e.target.value))} className="mt-1 w-24 rounded-lg border border-white/10 bg-slate-950 p-2 text-sm"/></label></article>)}
+                </div>
+              </div>}
               {active === "teacher" && <div className="space-y-3"><p className="text-xs text-slate-400">Business Teacher आपको बिज़नेस शुरू करने, ग्राहक समझने और खर्च का हिसाब बनाने में मार्गदर्शन देगा। AI सलाह वाला लाइव कनेक्शन अगले चरण में जोड़ा जाएगा।</p><p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm">पहला कदम: अपने ग्राहक, सेवा और उनकी समस्या को साफ़-साफ़ लिखें। फिर छोटी लागत में एक ऑफर तैयार करें और नतीजे मापें।</p></div>}
               {active === "orders" && <div className="space-y-3"><p className="text-xs text-slate-400">ऑर्डर ट्रैकिंग अभी तैयार नहीं है। फिलहाल Customer Finder में ग्राहक की जानकारी सुरक्षित रूप से दर्ज कर सकते हैं।</p><button onClick={()=>setActive("leads")} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Open customer list</button></div>}
               <button onClick={() => setActive("overview")} className="mt-6 rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold hover:bg-white/15">Back to overview</button>
