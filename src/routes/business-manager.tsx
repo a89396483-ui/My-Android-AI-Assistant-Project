@@ -94,6 +94,8 @@ function BusinessManager() {
   const [handoffCopied, setHandoffCopied] = useState(false);
   const [whatsAppNumber, setWhatsAppNumber] = useState("");
   const [customerMessage, setCustomerMessage] = useState(makeCapabilityReply());
+  const [customerQuestion, setCustomerQuestion] = useState("");
+  const [customerReplyBusy, setCustomerReplyBusy] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const accountSummary = summarizeAccounts(accounts);
   useEffect(() => {
@@ -157,6 +159,62 @@ function BusinessManager() {
     setAccounts(next);
     try { localStorage.setItem("ai-buddy-business-accounts", JSON.stringify(next)); } catch { /* Keep this session usable. */ }
     setAccountAmount(""); setAccountNote("");
+  }
+
+  async function createCustomerReply() {
+    if (!customerQuestion.trim()) return;
+    setCustomerReplyBusy(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lang: profile.language === "Urdu" ? "ur" : profile.language === "Hindi" ? "hi" : profile.language === "Roman Urdu" ? "roman-ur" : "auto",
+          mode: "manager",
+          messages: [{
+            role: "user",
+            text: [
+              "Write a ready-to-review reply to this customer's message for the business below.",
+              "Business: " + (profile.name || "Not provided"),
+              "Products/services and verified details: " + (profile.service || "Not provided"),
+              "Area: " + (profile.area || "Not provided"),
+              "Customer message: " + customerQuestion.trim(),
+              "Rules: Use a polite, natural tone. Answer only using facts supplied above. Never invent prices, stock, delivery times, warranties, discounts or policies. If a detail is missing, ask the customer one clear question or say the owner will confirm it. Keep it short and suitable for WhatsApp. Do not claim the message was sent."
+            ].join("\n")
+          }]
+        })
+      });
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({})) as { error?: string };
+        throw new Error(payload.error || "AI service is not configured yet.");
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let answer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const event = JSON.parse(raw) as { choices?: Array<{ delta?: { content?: string } }> };
+            answer += event.choices?.[0]?.delta?.content ?? "";
+          } catch { /* Ignore incomplete stream frames. */ }
+        }
+      }
+      if (!answer.trim()) throw new Error("AI returned an empty reply. Please try again.");
+      setCustomerMessage(answer.trim());
+    } catch (error) {
+      setCustomerMessage(error instanceof Error ? error.message : "Could not prepare the reply.");
+    } finally {
+      setCustomerReplyBusy(false);
+    }
   }
 
   async function createMarketingStrategy() {
@@ -460,7 +518,7 @@ function BusinessManager() {
                 <div className="border-t border-white/10 pt-4"><h3 className="mb-2 text-sm font-semibold">Add a potential customer you found</h3><form onSubmit={addLead} className="grid gap-2 sm:grid-cols-2"><input value={leadName} onChange={e=>setLeadName(e.target.value)} placeholder="Business / customer name" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /><input value={leadContact} onChange={e=>setLeadContact(e.target.value)} placeholder="Public contact (if appropriate)" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm" /><input value={leadNeed} onChange={e=>setLeadNeed(e.target.value)} placeholder="Which AI Buddy service do they need?" className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm sm:col-span-2" /><button type="submit" className="rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-sm font-bold sm:col-span-2">Save potential customer</button></form>{leads.map(lead=><div key={lead.id} className="mt-2 rounded-xl border border-white/10 p-3"><p className="text-sm font-semibold">{lead.name || "Customer"}</p><p className="mt-1 text-xs text-slate-400">{lead.contact} · {lead.need}</p></div>)}</div>
                 <p className="text-[10px] text-amber-200">یہ فی الحال prospecting guide ہے؛ ابھی یہ خود live internet پر سرچ یا خودکار رابطہ نہیں کرتا۔ اگلے مرحلے میں approved public-source research اور lead import workflow جوڑنا ہوگا۔</p>
               </div>}
-              {active === "replies" && <div className="space-y-3"><p className="text-xs text-slate-400">ग्राहक का जवाब यहाँ लिखें, फिर WhatsApp में खोलकर खुद जाँचें और Send दबाएँ।</p><label className="block space-y-1 text-xs text-slate-300">WhatsApp नंबर (देश कोड सहित, जैसे 923001234567)<input inputMode="tel" value={whatsAppNumber} onChange={e=>{setWhatsAppNumber(e.target.value);try{localStorage.setItem("ai-buddy-business-whatsapp",e.target.value);}catch { /* Clipboard or local storage may be unavailable; keep the current draft usable. */ }}} placeholder="923001234567" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white"/></label><textarea value={customerMessage} onChange={e=>setCustomerMessage(e.target.value)} rows={7} className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-relaxed text-white"/><div className="flex flex-wrap gap-2"><button onClick={()=>navigator.clipboard?.writeText(customerMessage)} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Copy reply</button><button disabled={!/^\+?[0-9\s()-]{8,20}$/.test(whatsAppNumber)} onClick={()=>{const number=whatsAppNumber.replace(/\D/g,"");window.open(`https://wa.me/${number}?text=${encodeURIComponent(customerMessage)}`,"_blank","noopener,noreferrer");}} className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-xs font-bold disabled:opacity-40">Open WhatsApp chat</button></div><p className="text-[11px] text-amber-200">WhatsApp opens with your draft. You review it and press Send yourself. Automatic inbox and auto-send are not connected.</p></div>}
+              {active === "replies" && <div className="space-y-3"><p className="text-xs text-slate-400">ग्राहक का सवाल नीचे लिखें। AI जवाब का मसौदा बनाएगा; भेजने से पहले आप उसे जाँच सकते हैं।</p><textarea value={customerQuestion} onChange={e=>setCustomerQuestion(e.target.value)} rows={3} placeholder="ग्राहक ने क्या पूछा है?" className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-relaxed text-white"/><button onClick={()=>void createCustomerReply()} disabled={customerReplyBusy || !customerQuestion.trim()} className="w-full rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-3 text-xs font-bold disabled:opacity-40">{customerReplyBusy ? "AI जवाब तैयार कर रहा है…" : "AI से ग्राहक का जवाब बनवाएँ"}</button><label className="block space-y-1 text-xs text-slate-300">WhatsApp नंबर (देश कोड सहित, जैसे 923001234567)<input inputMode="tel" value={whatsAppNumber} onChange={e=>{setWhatsAppNumber(e.target.value);try{localStorage.setItem("ai-buddy-business-whatsapp",e.target.value);}catch { /* Clipboard or local storage may be unavailable; keep the current draft usable. */ }}} placeholder="923001234567" className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white"/></label><textarea value={customerMessage} onChange={e=>setCustomerMessage(e.target.value)} rows={7} className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-relaxed text-white"/><div className="flex flex-wrap gap-2"><button onClick={()=>navigator.clipboard?.writeText(customerMessage)} className="rounded-xl bg-white/10 px-4 py-3 text-xs font-semibold">Copy reply</button><button disabled={!/^\+?[0-9\s()-]{8,20}$/.test(whatsAppNumber)} onClick={()=>{const number=whatsAppNumber.replace(/\D/g,"");window.open(`https://wa.me/${number}?text=${encodeURIComponent(customerMessage)}`,"_blank","noopener,noreferrer");}} className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-xs font-bold disabled:opacity-40">Open WhatsApp chat</button></div><p className="text-[11px] text-amber-200">WhatsApp opens with your draft. You review it and press Send yourself. Automatic inbox and auto-send are not connected.</p></div>}
               {active === "handoff" && <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-slate-400">ग्राहक की अनुमति से उसकी जानकारी यहाँ दर्ज करें। नीचे मालिक के लिए संदेश तैयार होगा। अभी यह संदेश अपने-आप WhatsApp या SMS से नहीं भेजा जाता।</p>
                 <div className="grid gap-2 sm:grid-cols-2">
